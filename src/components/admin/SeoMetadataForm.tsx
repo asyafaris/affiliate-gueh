@@ -38,12 +38,12 @@ export function SeoMetadataForm({ productId, productName, currentData }: Props) 
     try {
       const result = await updateSeoMetadata(productId, formData);
       if (result.success) {
-        setMessage("SEO metadata saved");
+        setMessage("SEO metadata berhasil disimpan.");
       } else {
-        setMessage("Error: " + result.error);
+        setMessage(result.error ?? "SEO metadata gagal disimpan. Cek kembali field yang wajib diisi.");
       }
     } catch (error) {
-      setMessage("Error: " + String(error));
+      setMessage("SEO metadata gagal disimpan karena koneksi atau server bermasalah. Coba ulangi sebentar lagi.");
     } finally {
       setLoading(false);
     }
@@ -108,7 +108,7 @@ export function SeoMetadataForm({ productId, productName, currentData }: Props) 
       </button>
 
       {message && (
-        <p className={`text-sm ${message.startsWith("Error") ? "text-red-600" : "text-green-600"}`}>{message}</p>
+        <p className={`text-sm ${message.includes("gagal") || message.includes("wajib") || message.includes("harus") || message.includes("maksimal") ? "text-red-600" : "text-green-600"}`}>{message}</p>
       )}
     </form>
   );

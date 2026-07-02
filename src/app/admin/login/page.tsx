@@ -28,14 +28,17 @@ function LoginForm() {
   }
 
   return (
-    <main className="grid min-h-screen place-items-center bg-paper px-4">
-      <form action={onSubmit} className="w-full max-w-md rounded-lg border border-line bg-white p-6 shadow-soft">
-        <p className="eyebrow">Admin CMS</p>
-        <h1 className="mt-2 font-serif text-3xl font-bold">Masuk ke dashboard</h1>
+    <main className="grid min-h-screen place-items-center bg-chrome px-4">
+      <form action={onSubmit} className="card w-full max-w-md p-6">
+        <div className="mb-2 flex items-center gap-2">
+          <span className="flex h-6 w-6 items-center justify-center rounded-md bg-accent text-sm font-bold text-white">w</span>
+          <span className="text-sm font-bold text-primary">worthgoods Admin</span>
+        </div>
+        <h1 className="mt-2 text-3xl">Masuk ke dashboard</h1>
         <div className="mt-6 grid gap-4">
-          <input name="email" type="email" required placeholder="Email" className="rounded-md border border-line px-4 py-3 outline-none focus:border-moss" />
-          <input name="password" type="password" required placeholder="Password" className="rounded-md border border-line px-4 py-3 outline-none focus:border-moss" />
-          {error ? <p className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</p> : null}
+          <input name="email" type="email" required placeholder="Email" className="field-input" />
+          <input name="password" type="password" required placeholder="Password" className="field-input" />
+          {error ? <p className="rounded-control bg-red-50 p-3 text-sm text-error">{error}</p> : null}
           <button className="btn-primary" disabled={loading}>{loading ? "Memeriksa..." : "Login"}</button>
         </div>
       </form>

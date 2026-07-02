@@ -13,7 +13,7 @@ export default async function GoPage({ params, searchParams }: { params: Promise
     return (
       <main className="container-page grid min-h-screen place-items-center py-12">
         <div className="card max-w-md p-8 text-center">
-          <h1 className="font-serif text-3xl font-bold">Link tidak tersedia</h1>
+          <h1 className="text-3xl font-bold">Link tidak tersedia</h1>
           <p className="mt-3 text-sm leading-6 text-ink/65">Link affiliate ini sudah tidak aktif atau tidak ditemukan. Silakan kembali ke halaman utama.</p>
           <Link href="/" className="btn-primary mt-5">Kembali ke beranda</Link>
         </div>

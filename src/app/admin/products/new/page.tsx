@@ -9,7 +9,7 @@ export default async function NewProductPage() {
   return (
     <AdminShell>
       <div className="card p-6">
-        <h1 className="mb-5 font-serif text-4xl font-bold">Produk baru</h1>
+        <h1 className="mb-5 text-4xl font-bold">Produk baru</h1>
         <ProductForm categories={categories} brands={brands} />
       </div>
     </AdminShell>

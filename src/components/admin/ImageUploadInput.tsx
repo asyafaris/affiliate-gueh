@@ -9,7 +9,7 @@ type ImageUploadInputProps = {
   placeholder?: string;
 };
 
-const inputClass = "rounded-md border border-line bg-white px-3 py-2 text-sm outline-none focus:border-moss";
+const inputClass = "min-w-0 rounded-md border border-line bg-white px-3 py-2 text-sm outline-none focus:border-moss";
 
 export function ImageUploadInput({ name, defaultValue, required, placeholder }: ImageUploadInputProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -18,21 +18,25 @@ export function ImageUploadInput({ name, defaultValue, required, placeholder }: 
 
   async function upload(file: File) {
     setStatus("Mengupload gambar...");
-    const formData = new FormData();
-    formData.append("file", file);
-    const response = await fetch("/api/admin/uploads", { method: "POST", body: formData });
-    const result = await response.json() as { url?: string; error?: string };
-    if (!response.ok || !result.url) {
-      setStatus(result.error ?? "Upload gagal.");
-      return;
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const response = await fetch("/api/admin/uploads", { method: "POST", body: formData });
+      const result = await response.json() as { url?: string; error?: string };
+      if (!response.ok || !result.url) {
+        setStatus(result.error ?? "Upload gagal. Pastikan format JPG, PNG, WEBP, atau GIF dan ukuran maksimal 5MB.");
+        return;
+      }
+      setValue(result.url);
+      setStatus("Gambar berhasil diupload.");
+    } catch {
+      setStatus("Upload gagal karena koneksi bermasalah. Coba ulangi sebentar lagi.");
     }
-    setValue(result.url);
-    setStatus("Gambar berhasil diupload.");
   }
 
   return (
     <div className="grid gap-2">
-      <div className="flex flex-col gap-2 sm:flex-row">
+      <div className="flex min-w-0 flex-col gap-2 sm:flex-row">
         <input
           name={name}
           className={`${inputClass} flex-1`}

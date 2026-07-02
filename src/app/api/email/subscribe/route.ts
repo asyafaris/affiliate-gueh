@@ -1,23 +1,29 @@
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { getDb } from "@/lib/db";
+
+const subscribeSchema = z.object({
+  email: z.string().trim().email("Format email belum valid. Contoh: nama@email.com"),
+  source: z.string().trim().optional()
+});
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, source } = await request.json();
+    const parsed = subscribeSchema.safeParse(await request.json());
 
-    if (!email || typeof email !== "string" || !email.includes("@")) {
-      return NextResponse.json({ error: "Invalid email" }, { status: 400 });
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Format email belum valid." }, { status: 400 });
     }
 
     await getDb().emailSubscriber.upsert({
-      where: { email },
+      where: { email: parsed.data.email },
       update: {},
-      create: { email, source: source || "unknown" }
+      create: { email: parsed.data.email, source: parsed.data.source || "unknown" }
     });
 
     return NextResponse.json({ success: true, message: "Subscribed successfully" });
   } catch (error) {
     console.error("Subscribe error:", error);
-    return NextResponse.json({ error: "Server error" }, { status: 500 });
+    return NextResponse.json({ error: "Subscribe gagal karena server bermasalah. Coba ulangi sebentar lagi." }, { status: 500 });
   }
 }

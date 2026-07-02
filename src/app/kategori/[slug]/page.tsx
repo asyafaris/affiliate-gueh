@@ -1,12 +1,13 @@
 import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
-import { ArrowRight, BookOpen, GitCompare, SlidersHorizontal } from "lucide-react";
+import { ArrowRight, BookOpen, GitCompare } from "lucide-react";
 import { getDb } from "@/lib/db";
 import { buildMetadata } from "@/lib/seo";
+import { cn } from "@/lib/utils";
 import { Header } from "@/components/public/Header";
 import { Footer } from "@/components/public/Footer";
-import { ProductGrid } from "@/components/public/ProductGrid";
+import { LoadMoreProductGrid } from "@/components/public/LoadMoreProductGrid";
 import { Breadcrumbs } from "@/components/public/Breadcrumbs";
 import { MarkdownText } from "@/components/public/MarkdownText";
 import type { ArticleSummary, BrandSummary, CategorySummary, ProductCardData } from "@/types/domain";
@@ -24,12 +25,18 @@ export default async function CategoryPage({ params, searchParams }: { params: P
   const { slug } = await params;
   const search = await searchParams;
   const db = getDb();
-  const category = await db.category.findUnique({ where: { slug } }) as CategorySummary | null;
+  const category = (await db.category.findUnique({ where: { slug } })) as CategorySummary | null;
   if (!category) notFound();
-  const orderBy = search.sort === "price" ? { priceEstimate: "asc" as const } : search.sort === "newest" ? { createdAt: "desc" as const } : { isFeatured: "desc" as const };
+  const activeSort = search.sort === "price" ? "price" : search.sort === "newest" ? "newest" : "featured";
+  const orderBy = activeSort === "price" ? { priceEstimate: "asc" as const } : activeSort === "newest" ? { createdAt: "desc" as const } : { isFeatured: "desc" as const };
   const products: ProductCardData[] = await db.product.findMany({
     where: { categoryId: category.id, isPublished: true, brand: search.brand ? { slug: search.brand } : undefined },
-    include: { brand: true, category: true, images: { where: { isPrimary: true }, take: 1 } },
+    include: {
+      brand: true,
+      category: true,
+      images: { where: { isPrimary: true }, take: 1 },
+      affiliateLinks: { where: { isActive: true }, orderBy: { sortOrder: "asc" }, take: 1 }
+    },
     orderBy
   });
   const [brands, articles, bestPicks]: [BrandSummary[], ArticleSummary[], ArticleSummary[]] = await Promise.all([
@@ -37,65 +44,79 @@ export default async function CategoryPage({ params, searchParams }: { params: P
     db.article.findMany({ where: { isPublished: true, articleType: { not: "BEST_PICKS" }, categories: { some: { categoryId: category.id } } }, take: 4 }),
     db.article.findMany({ where: { isPublished: true, articleType: "BEST_PICKS", categories: { some: { categoryId: category.id } } }, take: 3 })
   ]);
+
+  const sortOptions = [
+    { id: "featured", label: "Terpilih", href: `/kategori/${slug}${search.brand ? `?brand=${search.brand}` : ""}` },
+    { id: "price", label: "Harga termurah", href: `/kategori/${slug}?sort=price${search.brand ? `&brand=${search.brand}` : ""}` },
+    { id: "newest", label: "Terbaru", href: `/kategori/${slug}?sort=newest${search.brand ? `&brand=${search.brand}` : ""}` }
+  ];
+
   return (
     <>
       <Header />
       <main>
-        <section className="border-b border-line bg-[linear-gradient(180deg,#fbfaf5,#edf4eb)]">
-          <div className="container-page grid gap-8 py-10 lg:grid-cols-[1fr_0.78fr]">
-            <div>
-              <Breadcrumbs items={[{ label: "Beranda", href: "/" }, { label: "Kategori", href: "/kategori" }, { label: category.name, href: `/kategori/${category.slug}` }]} />
-              <p className="eyebrow mt-8">Kategori pilihan</p>
-              <h1 className="mt-3 max-w-3xl font-serif text-4xl font-bold leading-tight sm:text-5xl">{category.name}</h1>
-              <MarkdownText content={category.description} className="mt-4 max-w-2xl text-lg leading-8 text-ink/70 prose-p:m-0" />
-              <div className="mt-7 flex flex-wrap gap-3">
-                <Link href="#produk" className="btn-primary">Lihat rekomendasi</Link>
-                <Link href={`/bandingkan?category=${category.slug}`} className="btn-secondary">
-                  <GitCompare className="h-4 w-4" />
-                  Bandingkan kategori ini
-                </Link>
-              </div>
+        <section className="border-b border-neutral-100 bg-gradient-wash">
+          <div className="container-page grid gap-3 py-8 md:min-h-0">
+            <Breadcrumbs items={[{ label: "Beranda", href: "/" }, { label: "Kategori", href: "/kategori" }, { label: category.name, href: `/kategori/${category.slug}` }]} />
+            <span className="badge w-fit bg-accent-tint text-accent-dark">✓ {products.length} produk diuji langsung</span>
+            <h1 className="max-w-3xl text-4xl leading-tight">{category.name}</h1>
+            <MarkdownText content={category.description} className="max-w-2xl text-base leading-7 text-neutral-600 prose-p:m-0" />
+            <div className="mt-2 flex flex-wrap gap-3">
+              <Link href="#produk" className="btn-primary">Lihat rekomendasi</Link>
+              <Link href={`/bandingkan?category=${category.slug}`} className="btn-secondary">
+                <GitCompare className="h-4 w-4" />
+                Bandingkan kategori ini
+              </Link>
             </div>
-            <aside className="overflow-hidden rounded-lg border border-line bg-white shadow-soft">
-              {category.imageUrl ? (
-                <div className="relative aspect-[16/9] bg-line">
-                  <Image src={category.imageUrl} alt={category.name} fill priority className="object-cover" sizes="(min-width: 1024px) 40vw, 100vw" />
-                </div>
-              ) : null}
-              <div className="grid content-start gap-3 p-5">
-                <p className="eyebrow">Cara pakai halaman ini</p>
-                <p className="text-sm leading-6 text-ink/70">
-                  Mulai dari kebutuhan utama, gunakan filter brand atau harga, lalu buka detail produk untuk melihat alasan rekomendasi dan sumber pembelian.
-                </p>
-                <div className="grid gap-2 text-sm text-ink/65">
-                  <p>{products.length} produk ditemukan</p>
-                  <p>{brands.length} brand tersedia</p>
-                  <p>{articles.length + bestPicks.length} konten terkait</p>
-                </div>
-              </div>
-            </aside>
           </div>
         </section>
 
-        <section id="produk" className="container-page grid gap-8 py-10">
-          <div className="flex flex-col gap-4 rounded-lg border border-line bg-white p-4 md:flex-row md:items-center md:justify-between">
-            <div className="flex items-center gap-2">
-              <SlidersHorizontal className="h-5 w-5 text-moss" />
-              <p className="text-sm font-semibold">Filter dan urutkan</p>
-            </div>
+        <section id="produk" className="container-page grid gap-6 py-10">
+          <div className="sticky top-[60px] z-30 flex flex-col gap-3 rounded-card border border-neutral-200 bg-white/95 p-4 backdrop-blur md:flex-row md:items-center md:justify-between">
             <div className="flex flex-wrap gap-2">
-              <Link className="btn-secondary py-2" href={`/kategori/${slug}`}>Semua brand</Link>
-              {brands.map((brand) => <Link key={brand.slug} className="btn-secondary py-2" href={`/kategori/${slug}?brand=${brand.slug}`}>{brand.name}</Link>)}
-              <Link className="btn-secondary py-2" href={`/kategori/${slug}?sort=price`}>Harga termurah</Link>
-              <Link className="btn-secondary py-2" href={`/kategori/${slug}?sort=newest`}>Terbaru</Link>
+              <Link
+                href={`/kategori/${slug}${activeSort !== "featured" ? `?sort=${activeSort}` : ""}`}
+                className={cn(
+                  "rounded-full border-2 px-4 py-2 text-sm font-semibold transition",
+                  !search.brand ? "border-accent bg-accent-tint text-accent-dark" : "border-neutral-200 bg-white text-neutral-600 hover:border-neutral-300"
+                )}
+              >
+                Semua brand
+              </Link>
+              {brands.map((brand) => (
+                <Link
+                  key={brand.slug}
+                  href={`/kategori/${slug}?brand=${brand.slug}${activeSort !== "featured" ? `&sort=${activeSort}` : ""}`}
+                  className={cn(
+                    "rounded-full border-2 px-4 py-2 text-sm font-semibold transition",
+                    search.brand === brand.slug ? "border-accent bg-accent-tint text-accent-dark" : "border-neutral-200 bg-white text-neutral-600 hover:border-neutral-300"
+                  )}
+                >
+                  {brand.name}
+                </Link>
+              ))}
+            </div>
+            <div className="flex gap-2">
+              {sortOptions.map((option) => (
+                <Link
+                  key={option.id}
+                  href={option.href}
+                  className={cn(
+                    "rounded-control border-2 px-3 py-2 text-sm font-semibold transition",
+                    activeSort === option.id ? "border-accent bg-accent-tint text-accent-dark" : "border-neutral-200 bg-white text-neutral-600 hover:border-neutral-300"
+                  )}
+                >
+                  {option.label}
+                </Link>
+              ))}
             </div>
           </div>
           {products.length ? (
-            <ProductGrid products={products} />
+            <LoadMoreProductGrid products={products} />
           ) : (
-            <div className="rounded-lg border border-line bg-white p-10 text-center">
-              <h2 className="font-serif text-3xl font-bold">Belum ada produk yang cocok</h2>
-              <p className="mt-3 text-sm leading-6 text-ink/65">Coba reset filter atau lihat kategori lain yang masih berdekatan dengan kebutuhanmu.</p>
+            <div className="rounded-card border border-neutral-200 bg-white p-10 text-center">
+              <h2 className="text-3xl">Belum ada produk yang cocok</h2>
+              <p className="mt-3 text-sm leading-6 text-neutral-500">Coba reset filter atau lihat kategori lain yang masih berdekatan dengan kebutuhanmu.</p>
               <Link href={`/kategori/${slug}`} className="btn-primary mt-5">Reset filter</Link>
             </div>
           )}
@@ -105,30 +126,30 @@ export default async function CategoryPage({ params, searchParams }: { params: P
           <div className="container-page grid gap-6 lg:grid-cols-2">
             <div>
               <div className="mb-4 flex items-center gap-2">
-                <BookOpen className="h-5 w-5 text-moss" />
-                <h2 className="font-serif text-3xl font-bold">Artikel terkait</h2>
+                <BookOpen className="h-5 w-5 text-accent-dark" />
+                <h2 className="text-3xl">Artikel terkait</h2>
               </div>
               <div className="grid gap-3">
                 {articles.length ? articles.map((article) => (
-                  <Link key={article.slug} href={`/artikel/${article.slug}`} className="card flex items-center justify-between gap-4 p-4 hover:border-moss">
+                  <Link key={article.slug} href={`/artikel/${article.slug}`} className="card flex items-center justify-between gap-4 p-4">
                     <span className="font-semibold">{article.title}</span>
-                    <ArrowRight className="h-4 w-4 shrink-0 text-moss" />
+                    <ArrowRight className="h-4 w-4 shrink-0 text-accent-dark" />
                   </Link>
-                )) : <p className="rounded-lg border border-line bg-paper p-4 text-sm text-ink/60">Belum ada artikel terkait untuk kategori ini.</p>}
+                )) : <p className="rounded-card border border-neutral-200 bg-neutral-50 p-4 text-sm text-neutral-500">Belum ada artikel terkait untuk kategori ini.</p>}
               </div>
             </div>
             <div>
               <div className="mb-4 flex items-center gap-2">
-                <GitCompare className="h-5 w-5 text-moss" />
-                <h2 className="font-serif text-3xl font-bold">Best Pick terkait</h2>
+                <GitCompare className="h-5 w-5 text-accent-dark" />
+                <h2 className="text-3xl">Best Pick terkait</h2>
               </div>
               <div className="grid gap-3">
                 {bestPicks.length ? bestPicks.map((article) => (
-                  <Link key={article.slug} href={`/best/${article.slug}`} className="card flex items-center justify-between gap-4 p-4 hover:border-moss">
+                  <Link key={article.slug} href={`/best/${article.slug}`} className="card flex items-center justify-between gap-4 p-4">
                     <span className="font-semibold">{article.title}</span>
-                    <ArrowRight className="h-4 w-4 shrink-0 text-moss" />
+                    <ArrowRight className="h-4 w-4 shrink-0 text-accent-dark" />
                   </Link>
-                )) : <Link href="/best" className="card flex items-center justify-between gap-4 p-4 font-semibold hover:border-moss">Lihat semua Best Pick <ArrowRight className="h-4 w-4 text-moss" /></Link>}
+                )) : <Link href="/best" className="card flex items-center justify-between gap-4 p-4 font-semibold">Lihat semua Best Pick <ArrowRight className="h-4 w-4 text-accent-dark" /></Link>}
               </div>
             </div>
           </div>

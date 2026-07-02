@@ -1,4 +1,4 @@
-# Produk Worth It
+# worthgoods
 
 Production-minded MVP for an Indonesian affiliate editorial-commerce content hub.
 

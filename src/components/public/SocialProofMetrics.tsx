@@ -17,7 +17,7 @@ export function SocialProofMetrics({ clicksThisWeek, emailSubscribers, productsR
 
   return (
     <LazyMotion features={domAnimation} strict>
-      <section className="border-y border-line bg-white py-8">
+      <section className="border-y border-neutral-100 bg-neutral-50 py-8">
         <div className="container-page">
           <div className="grid grid-cols-3 gap-4">
             {stats.map((stat, i) => (
@@ -29,8 +29,8 @@ export function SocialProofMetrics({ clicksThisWeek, emailSubscribers, productsR
                 transition={{ delay: i * 0.1, duration: 0.4 }}
                 className="text-center"
               >
-                <div className="text-3xl font-bold text-moss md:text-4xl">{stat.value.toLocaleString("id-ID")}</div>
-                <p className="mt-2 text-xs text-ink/60">{stat.label}</p>
+                <div className="text-3xl font-bold text-accent-dark md:text-4xl">{stat.value.toLocaleString("id-ID")}</div>
+                <p className="mt-2 text-xs text-neutral-500">{stat.label}</p>
               </m.div>
             ))}
           </div>

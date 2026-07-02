@@ -14,5 +14,5 @@ export default async function NewArticlePage({ searchParams }: { searchParams: P
   const defaultType = getArticleType(search.type);
   const returnTo = search.returnTo?.startsWith("/admin/") ? search.returnTo : undefined;
   const products = await getDb().product.findMany({ include: { brand: true, category: true }, orderBy: { name: "asc" } });
-  return <AdminShell><div className="card p-6"><h1 className="mb-5 font-serif text-4xl font-bold">Artikel baru</h1><ArticleForm products={products} defaultType={defaultType} lockedType={defaultType} returnTo={returnTo} /></div></AdminShell>;
+  return <AdminShell><div className="card p-6"><h1 className="mb-5 text-4xl font-bold">Artikel baru</h1><ArticleForm products={products} defaultType={defaultType} lockedType={defaultType} returnTo={returnTo} /></div></AdminShell>;
 }

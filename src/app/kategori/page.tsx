@@ -39,7 +39,7 @@ export default async function CategoriesIndexPage() {
       orderBy: [{ featured: "desc" }, { sortOrder: "asc" }, { name: "asc" }]
     }),
     getDb().article.findMany({
-      where: { isPublished: true, articleType: { in: ["GUIDE", "TIPS"] } },
+      where: { isPublished: true, articleType: "TIPS" },
       orderBy: { publishedAt: "desc" },
       take: 3
     })
@@ -55,7 +55,7 @@ export default async function CategoriesIndexPage() {
           <div className="container-page grid gap-8 py-14 lg:grid-cols-[1fr_0.85fr]">
             <div>
               <p className="eyebrow">Kategori produk</p>
-              <h1 className="mt-3 max-w-3xl font-serif text-4xl font-bold leading-tight sm:text-5xl">
+              <h1 className="mt-3 max-w-3xl text-4xl font-bold leading-tight sm:text-5xl">
                 Browse rekomendasi berdasarkan kebutuhan belanja kamu.
               </h1>
               <p className="mt-4 max-w-2xl text-lg leading-8 text-ink/70">
@@ -81,7 +81,7 @@ export default async function CategoriesIndexPage() {
         <section id="grid" className="container-page py-12">
           <div className="mb-6">
             <p className="eyebrow">Semua kategori</p>
-            <h2 className="font-serif text-3xl font-bold">Jelajahi berdasarkan kategori</h2>
+            <h2 className="text-3xl font-bold">Jelajahi berdasarkan kategori</h2>
           </div>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {categories.map((category) => (
@@ -94,7 +94,7 @@ export default async function CategoriesIndexPage() {
                   )}
                 </div>
                 <div className="p-5">
-                  <h3 className="font-serif text-2xl font-bold">{category.name}</h3>
+                  <h3 className="text-2xl font-bold">{category.name}</h3>
                   <p className="mt-3 line-clamp-3 text-sm leading-6 text-ink/65">{category.description}</p>
                   <p className="mt-3 text-xs font-semibold text-moss">{category._count.products} produk tersedia</p>
                   <div className="mt-5 flex flex-wrap gap-2">
@@ -111,12 +111,12 @@ export default async function CategoriesIndexPage() {
           <div className="container-page">
             <div className="mb-6">
               <p className="eyebrow">Mulai dari kebutuhanmu</p>
-              <h2 className="font-serif text-3xl font-bold">Tidak harus tahu nama produknya dulu</h2>
+              <h2 className="text-3xl font-bold">Tidak harus tahu nama produknya dulu</h2>
             </div>
             <div className="grid gap-4 md:grid-cols-3">
               {needCards.map((item) => (
                 <div key={item.title} className="card p-5">
-                  <h3 className="font-serif text-2xl font-bold">{item.title}</h3>
+                  <h3 className="text-2xl font-bold">{item.title}</h3>
                   <p className="mt-3 text-sm leading-6 text-ink/65">{item.copy}</p>
                 </div>
               ))}
@@ -128,14 +128,14 @@ export default async function CategoriesIndexPage() {
           <Link href="/best" className="card flex items-center justify-between gap-4 p-6 hover:border-moss">
             <div>
               <p className="eyebrow">Best Pick</p>
-              <h2 className="mt-2 font-serif text-3xl font-bold">Lihat pilihan produk berdasarkan tema</h2>
+              <h2 className="mt-2 text-3xl font-bold">Lihat pilihan produk berdasarkan tema</h2>
             </div>
             <ArrowRight className="h-5 w-5 text-moss" />
           </Link>
           <Link href="/bandingkan" className="card flex items-center justify-between gap-4 p-6 hover:border-moss">
             <div>
               <p className="eyebrow">Bandingkan</p>
-              <h2 className="mt-2 font-serif text-3xl font-bold">Bandingkan produk sejenis sebelum beli</h2>
+              <h2 className="mt-2 text-3xl font-bold">Bandingkan produk sejenis sebelum beli</h2>
             </div>
             <GitCompare className="h-5 w-5 text-moss" />
           </Link>
@@ -146,13 +146,13 @@ export default async function CategoriesIndexPage() {
             <div className="container-page">
               <div className="mb-6 flex items-center gap-2">
                 <BookOpen className="h-5 w-5 text-moss" />
-                <h2 className="font-serif text-3xl font-bold">Panduan terkait</h2>
+                <h2 className="text-3xl font-bold">Tips terkait</h2>
               </div>
               <div className="grid gap-4 md:grid-cols-3">
                 {articles.map((article) => (
                   <Link key={article.slug} href={`/artikel/${article.slug}`} className="card block p-5 hover:border-moss">
                     <p className="text-xs font-semibold text-moss">{article.articleType.replace("_", " ")}</p>
-                    <h3 className="mt-2 font-serif text-xl font-bold">{article.title}</h3>
+                    <h3 className="mt-2 text-xl font-bold">{article.title}</h3>
                     <p className="mt-2 line-clamp-3 text-sm leading-6 text-ink/65">{article.excerpt}</p>
                   </Link>
                 ))}

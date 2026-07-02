@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { requireAdmin } from "@/lib/admin";
 import { getDb } from "@/lib/db";
+import { parseEvidenceStats } from "@/lib/utils";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { ProductForm } from "@/components/admin/ProductForm";
 import { SeoMetadataForm } from "@/components/admin/SeoMetadataForm";
@@ -19,19 +20,19 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
   return (
     <AdminShell>
       <div className="card p-6">
-        <h1 className="mb-5 font-serif text-4xl font-bold">Edit produk</h1>
-        <ProductForm product={product} categories={categories} brands={brands} />
+        <h1 className="mb-5 text-4xl">Edit produk</h1>
+        <ProductForm product={{ ...product, evidenceStats: parseEvidenceStats(product.evidenceStats) }} categories={categories} brands={brands} />
       </div>
-      <section className="mt-8 border-t border-line pt-8">
-        <h2 className="mb-4 font-serif text-2xl font-bold">SEO & Social Preview</h2>
+      <section className="mt-8 border-t border-neutral-200 pt-8">
+        <h2 className="mb-4 text-2xl">SEO & Social Preview</h2>
         <SeoMetadataForm
           productId={product.id}
           productName={product.name}
           currentData={seoMeta ?? undefined}
         />
       </section>
-      <section className="mt-8 border-t border-line pt-8">
-        <h2 className="mb-4 font-serif text-2xl font-bold">Expert Sources</h2>
+      <section className="mt-8 border-t border-neutral-200 pt-8">
+        <h2 className="mb-4 text-2xl">Expert Sources</h2>
         <ExpertSourceForm productId={product.id} expertSources={product.expertSources} />
       </section>
     </AdminShell>

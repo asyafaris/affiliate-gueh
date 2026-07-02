@@ -1,11 +1,11 @@
 export function AdminField({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <label className="grid gap-1 text-sm font-medium text-ink">
+    <label className="grid min-w-0 gap-1 text-sm font-medium text-primary">
       {label}
       {children}
     </label>
   );
 }
 
-export const inputClass = "rounded-md border border-line bg-white px-3 py-2 text-sm outline-none focus:border-moss";
-export const textareaClass = "min-h-28 rounded-md border border-line bg-white px-3 py-2 text-sm outline-none focus:border-moss";
+export const inputClass = "field-input min-w-0";
+export const textareaClass = "field-input min-h-28 min-w-0 py-2";

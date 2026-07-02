@@ -1,12 +1,21 @@
 import Link from "next/link";
 import { ExternalLink } from "lucide-react";
+import { merchantStyle } from "@/lib/merchants";
+import { cn, formatRupiah } from "@/lib/utils";
 
 type LinkData = {
   redirectCode: string;
   buttonLabel: string;
   merchantName: string;
   isPrimary: boolean;
+  price?: number | null;
 };
+
+function cheapestRedirectCode(links: LinkData[]) {
+  const priced = links.filter((link): link is LinkData & { price: number } => typeof link.price === "number");
+  if (priced.length < 2) return undefined;
+  return priced.reduce((min, link) => (link.price < min.price ? link : min)).redirectCode;
+}
 
 export function AffiliateButtonGroup({
   links,
@@ -17,21 +26,67 @@ export function AffiliateButtonGroup({
   sourcePageType: string;
   sourcePageSlug: string;
 }) {
-  const active = links;
-  if (!active.length) return <p className="text-sm text-ink/60">Link pembelian belum tersedia.</p>;
+  if (!links.length) return <p className="text-sm text-neutral-500">Link pembelian belum tersedia.</p>;
+  const sorted = [...links].sort((a, b) => (b.isPrimary ? 1 : 0) - (a.isPrimary ? 1 : 0));
+  const cheapestCode = cheapestRedirectCode(links);
+
   return (
     <div className="grid gap-2">
-      {active.map((link) => (
-        <Link
+      {sorted.map((link) => (
+        <MerchantCta
           key={link.redirectCode}
-          href={`/go/${link.redirectCode}?source_page_type=${sourcePageType}&source_page_slug=${sourcePageSlug}`}
-          className={link.isPrimary ? "btn-primary w-full" : "btn-secondary w-full"}
-          rel="sponsored nofollow noopener"
-        >
-          {link.buttonLabel}
-          <ExternalLink className="h-4 w-4" />
-        </Link>
+          link={link}
+          sourcePageType={sourcePageType}
+          sourcePageSlug={sourcePageSlug}
+          isCheapest={link.redirectCode === cheapestCode}
+        />
       ))}
+      <p className="text-center text-xs text-neutral-500">worthgoods dapat komisi tanpa biaya tambahan untuk kamu</p>
     </div>
+  );
+}
+
+export function MerchantCta({
+  link,
+  sourcePageType,
+  sourcePageSlug,
+  isCheapest,
+  className
+}: {
+  link: LinkData;
+  sourcePageType: string;
+  sourcePageSlug: string;
+  isCheapest?: boolean;
+  className?: string;
+}) {
+  const style = merchantStyle(link.merchantName);
+  return (
+    <Link
+      href={`/go/${link.redirectCode}?source_page_type=${sourcePageType}&source_page_slug=${sourcePageSlug}`}
+      rel="sponsored nofollow noopener"
+      style={{ backgroundColor: style.bg }}
+      className={cn(
+        "flex min-h-[48px] items-center justify-between gap-3 rounded-control px-4 py-2.5 font-semibold text-white transition hover:-translate-y-px hover:brightness-110",
+        className
+      )}
+    >
+      <span className="flex min-w-0 items-center gap-2.5 text-left">
+        <span className="flex h-6 w-6 flex-none items-center justify-center rounded-full bg-white/20 text-xs font-bold">
+          {style.mark}
+        </span>
+        <span className="grid min-w-0">
+          <span className="truncate text-sm">{link.buttonLabel || `Cek harga di ${link.merchantName}`}</span>
+          {typeof link.price === "number" ? (
+            <span className="flex items-center gap-1.5 text-xs font-normal text-white/80">
+              {formatRupiah(link.price)}
+              {isCheapest ? (
+                <span className="rounded-full bg-white/20 px-1.5 py-0.5 text-[10px] font-bold tracking-wide">TERMURAH</span>
+              ) : null}
+            </span>
+          ) : null}
+        </span>
+      </span>
+      <ExternalLink className="h-4 w-4 flex-none" />
+    </Link>
   );
 }

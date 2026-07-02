@@ -30,6 +30,8 @@ model User {
   email        String    @unique
   passwordHash String
   name         String
+  title        String?
+  avatarUrl    String?
   role         UserRole  @default(ADMIN)
   isActive     Boolean   @default(true)
   lastLoginAt  DateTime?
@@ -80,7 +82,12 @@ model Product {
   editorialSummary  String
   bestFor           String
   priceEstimate     Int
+  compareAtPrice    Int?
   currency          String                 @default("IDR")
+  score             Float?
+  reviewCount       Int                    @default(0)
+  hoursTested       Int?
+  evidenceStats     Json                   @default("[]")
   isFeatured        Boolean                @default(false)
   isPublished       Boolean                @default(false)
   publishedAt       DateTime?
@@ -122,6 +129,7 @@ model ProductAffiliateLink {
   merchantName String
   buttonLabel  String
   affiliateUrl String
+  price        Int?
   redirectCode String           @unique
   isPrimary    Boolean          @default(false)
   isActive     Boolean          @default(true)

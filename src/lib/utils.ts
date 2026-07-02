@@ -24,6 +24,18 @@ export function detectDevice(userAgent = "") {
   return "desktop";
 }
 
+export type EvidenceStat = { label: string; value: string };
+
+export function parseEvidenceStats(payload: unknown): EvidenceStat[] {
+  if (!Array.isArray(payload)) return [];
+  return payload.filter((item): item is EvidenceStat => Boolean(item) && typeof item === "object" && "label" in item && "value" in item);
+}
+
+export function estimateReadTime(content: string) {
+  const words = content.trim().split(/\s+/).filter(Boolean).length;
+  return Math.max(1, Math.round(words / 200));
+}
+
 export function slugify(value: string) {
   return value
     .toLowerCase()

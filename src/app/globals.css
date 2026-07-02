@@ -11,23 +11,35 @@ html {
 }
 
 body {
-  background: #fbfaf5;
-  color: #17211b;
+  background: #eef0f2;
+  color: #1f2937;
 }
 
 ::selection {
-  background: #d9e7d0;
+  background: #d1fae5;
 }
 
 @layer base {
+  h1 {
+    @apply font-bold leading-tight tracking-[-0.03em] text-primary;
+  }
+
+  h2 {
+    @apply font-bold tracking-[-0.01em] text-primary;
+  }
+
+  h3 {
+    @apply font-semibold text-primary;
+  }
+
   p {
-    @apply text-ink/70 leading-relaxed;
+    @apply text-neutral-600 leading-relaxed;
   }
 
   input:focus-visible,
   button:focus-visible,
   a:focus-visible {
-    @apply outline-none ring-2 ring-moss/40;
+    @apply outline-none ring-4 ring-accent/20;
   }
 }
 
@@ -37,18 +49,34 @@ body {
   }
 
   .card {
-    @apply rounded-lg border border-line bg-white shadow-sm;
+    @apply rounded-card border border-neutral-200 bg-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lift;
   }
 
   .eyebrow {
-    @apply text-xs font-bold uppercase tracking-wide text-moss;
+    @apply text-xs font-bold uppercase tracking-wide text-accent-dark;
   }
 
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 rounded-md bg-ink px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-moss;
+    @apply inline-flex min-h-[48px] items-center justify-center gap-2 rounded-control bg-accent px-5 py-2.5 text-sm font-semibold text-white transition hover:-translate-y-px hover:bg-accent-dark disabled:pointer-events-none disabled:opacity-50;
   }
 
   .btn-secondary {
-    @apply inline-flex items-center justify-center gap-2 rounded-md border border-line bg-white px-4 py-2.5 text-sm font-semibold text-ink transition hover:border-moss hover:text-moss;
+    @apply inline-flex min-h-[48px] items-center justify-center gap-2 rounded-control border-2 border-accent bg-white px-5 py-2.5 text-sm font-semibold text-accent-dark transition hover:bg-accent-tint disabled:pointer-events-none disabled:opacity-50;
+  }
+
+  .btn-ghost {
+    @apply inline-flex min-h-[48px] items-center justify-center gap-2 rounded-control px-5 py-2.5 text-sm font-semibold text-neutral-700 transition hover:bg-neutral-100 disabled:pointer-events-none disabled:opacity-50;
+  }
+
+  .badge {
+    @apply inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold;
+  }
+
+  .field-input {
+    @apply min-h-[48px] w-full rounded-control border-2 border-neutral-300 bg-white px-3.5 text-sm text-primary outline-none transition focus:border-accent focus:ring-4 focus:ring-accent/20;
+  }
+
+  .image-placeholder {
+    @apply bg-placeholder flex items-center justify-center text-[11px] font-mono text-neutral-400;
   }
 }

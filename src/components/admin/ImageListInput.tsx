@@ -7,7 +7,7 @@ type ImageListInputProps = {
   defaultValue?: string;
 };
 
-const textareaClass = "min-h-28 rounded-md border border-line bg-white px-3 py-2 text-sm outline-none focus:border-moss";
+const textareaClass = "min-h-28 min-w-0 rounded-md border border-line bg-white px-3 py-2 text-sm outline-none focus:border-moss";
 
 export function ImageListInput({ name, defaultValue = "" }: ImageListInputProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -18,16 +18,21 @@ export function ImageListInput({ name, defaultValue = "" }: ImageListInputProps)
     const urls: string[] = [];
     setStatus(`Mengupload ${files.length} gambar...`);
 
-    for (const file of Array.from(files)) {
-      const formData = new FormData();
-      formData.append("file", file);
-      const response = await fetch("/api/admin/uploads", { method: "POST", body: formData });
-      const result = await response.json() as { url?: string; error?: string };
-      if (!response.ok || !result.url) {
-        setStatus(result.error ?? "Ada gambar yang gagal diupload.");
-        return;
+    try {
+      for (const file of Array.from(files)) {
+        const formData = new FormData();
+        formData.append("file", file);
+        const response = await fetch("/api/admin/uploads", { method: "POST", body: formData });
+        const result = await response.json() as { url?: string; error?: string };
+        if (!response.ok || !result.url) {
+          setStatus(result.error ?? "Ada gambar yang gagal diupload. Pastikan format JPG, PNG, WEBP, atau GIF dan ukuran maksimal 5MB.");
+          return;
+        }
+        urls.push(result.url);
       }
-      urls.push(result.url);
+    } catch {
+      setStatus("Upload gagal karena koneksi bermasalah. Coba ulangi sebentar lagi.");
+      return;
     }
 
     setValue((current) => [current.trim(), ...urls].filter(Boolean).join("\n"));
@@ -35,7 +40,7 @@ export function ImageListInput({ name, defaultValue = "" }: ImageListInputProps)
   }
 
   return (
-    <div className="grid gap-2">
+    <div className="grid min-w-0 gap-2">
       <textarea name={name} className={textareaClass} value={value} onChange={(event) => setValue(event.target.value)} />
       <div className="flex flex-wrap items-center gap-2">
         <input

@@ -50,6 +50,7 @@ export default async function CompareIndexPage({ searchParams }: { searchParams:
         buttonLabel: string;
         merchantName: string;
         isPrimary: boolean;
+        price: number | null;
       }[];
     }[],
     ComparisonArticle[]
@@ -101,14 +102,14 @@ export default async function CompareIndexPage({ searchParams }: { searchParams:
     <>
       <Header />
       <main>
-        <section className="border-b border-line bg-[linear-gradient(180deg,#fbfaf5,#edf4eb)]">
+        <section className="border-b border-neutral-100 bg-gradient-wash">
           <div className="container-page grid gap-8 py-14 lg:grid-cols-[1fr_0.85fr]">
             <div>
               <p className="eyebrow">Bandingkan produk</p>
-              <h1 className="mt-3 max-w-3xl font-serif text-4xl font-bold leading-tight sm:text-5xl">
+              <h1 className="mt-3 max-w-3xl text-4xl leading-tight sm:text-5xl">
                 Bingung pilih produk yang mana?
               </h1>
-              <p className="mt-4 max-w-2xl text-lg leading-8 text-ink/70">
+              <p className="mt-4 max-w-2xl text-lg leading-8 text-neutral-600">
                 Pilih kategori, pilih 2 sampai 4 produk sejenis, lalu lihat perbedaan harga, spesifikasi, kelebihan, kekurangan, dan verdict berdasarkan data produk.
               </p>
               <div className="mt-7 flex flex-wrap gap-3">
@@ -116,9 +117,9 @@ export default async function CompareIndexPage({ searchParams }: { searchParams:
                 <Link href="#hasil" className="btn-secondary">Lihat hasil</Link>
               </div>
             </div>
-            <div className="rounded-lg border border-line bg-ink p-5 text-white shadow-soft">
+            <div className="rounded-panel bg-primary p-5 text-white shadow-soft">
               <p className="text-xs font-bold uppercase tracking-wide text-white/65">Verdict pintar berdasarkan data produk</p>
-              <h2 className="mt-3 font-serif text-3xl font-bold">Tanpa klaim AI, tanpa API eksternal.</h2>
+              <h2 className="mt-3 text-3xl text-white">Tanpa klaim AI, tanpa API eksternal.</h2>
               <p className="mt-3 text-sm leading-6 text-white/75">
                 Verdict dibuat dari aturan sederhana berbasis estimasi harga, best-for, ringkasan editorial, serta jumlah pros dan cons yang tersedia.
               </p>
@@ -134,15 +135,15 @@ export default async function CompareIndexPage({ searchParams }: { searchParams:
           <div className="container-page">
             <div className="mb-6">
               <p className="eyebrow">Perbandingan editorial</p>
-              <h2 className="font-serif text-3xl font-bold">Baca perbandingan yang sudah dikurasi</h2>
+              <h2 className="text-3xl">Baca perbandingan yang sudah dikurasi</h2>
             </div>
             <div className="grid gap-4 md:grid-cols-2">
               {comparisons.map((article) => (
-                <Link key={article.slug} href={`/bandingkan/${article.slug}`} className="card block p-5 hover:border-moss">
-                  <p className="text-xs font-semibold text-moss">{article.products[0]?.product.category.name ?? "Comparison"}</p>
-                  <h3 className="mt-2 font-serif text-2xl font-bold">{article.title}</h3>
-                  <p className="mt-3 line-clamp-3 text-sm leading-6 text-ink/65">{article.excerpt}</p>
-                  <span className="mt-5 inline-flex items-center gap-1 text-sm font-semibold text-moss">
+                <Link key={article.slug} href={`/bandingkan/${article.slug}`} className="card block p-5">
+                  <p className="eyebrow">{article.products[0]?.product.category.name ?? "Comparison"}</p>
+                  <h3 className="mt-2 text-2xl">{article.title}</h3>
+                  <p className="mt-3 line-clamp-3 text-sm leading-6 text-neutral-600">{article.excerpt}</p>
+                  <span className="mt-5 inline-flex items-center gap-1 text-sm font-semibold text-accent-dark">
                     Buka perbandingan <ArrowRight className="h-4 w-4" />
                   </span>
                 </Link>
@@ -152,16 +153,16 @@ export default async function CompareIndexPage({ searchParams }: { searchParams:
         </section>
 
         <section className="container-page py-12">
-          <div className="rounded-lg border border-line bg-[linear-gradient(135deg,#ffffff,#edf4eb)] p-6">
+          <div className="rounded-panel border border-accent-border bg-gradient-wash p-6">
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div>
                 <p className="eyebrow">Aturan perbandingan</p>
-                <h2 className="mt-2 font-serif text-3xl font-bold">Bandingkan produk sejenis agar keputusannya lebih jelas.</h2>
-                <p className="mt-3 max-w-3xl text-sm leading-6 text-ink/65">
+                <h2 className="mt-2 text-3xl">Bandingkan produk sejenis agar keputusannya lebih jelas.</h2>
+                <p className="mt-3 max-w-3xl text-sm leading-6 text-neutral-600">
                   Kami menghindari perbandingan lintas kategori yang terlalu jauh karena hasilnya mudah bias. Kursi lebih pas dibanding kursi, keyboard dengan keyboard, dan aksesori dengan aksesori.
                 </p>
               </div>
-              <ShieldCheck className="h-10 w-10 shrink-0 text-moss" />
+              <ShieldCheck className="h-10 w-10 shrink-0 text-accent-dark" />
             </div>
           </div>
         </section>

@@ -70,7 +70,7 @@ export default async function AnalyticsPage() {
   return (
     <AdminShell>
       <div className="grid gap-6">
-        <div><p className="eyebrow">Analytics</p><h1 className="font-serif text-4xl font-bold">Klik Affiliate</h1></div>
+        <div><p className="eyebrow">Analytics</p><h1 className="text-4xl font-bold">Klik Affiliate</h1></div>
         <div className="grid gap-4 md:grid-cols-3">
           <div className="card p-5"><p className="text-sm text-ink/60">Total Klik Affiliate</p><p className="mt-2 text-4xl font-bold">{total}</p></div>
           <div className="card p-5">

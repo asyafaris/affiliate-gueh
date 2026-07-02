@@ -21,7 +21,7 @@ export default async function ArticlesPage() {
     <AdminShell>
       <div className="grid gap-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h1 className="font-serif text-4xl font-bold">Articles</h1>
+          <h1 className="text-4xl font-bold">Articles</h1>
           <Link href="/admin/articles/new" className="btn-primary">Create article</Link>
         </div>
 

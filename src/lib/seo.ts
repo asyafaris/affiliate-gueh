@@ -20,7 +20,7 @@ export function buildMetadata(input: {
       title: input.ogTitle || input.title,
       description: input.ogDescription || input.description,
       url,
-      siteName: "Produk Worth It",
+      siteName: "worthgoods",
       locale: "id_ID",
       type: "website",
       images: input.image ? [{ url: input.image }] : undefined

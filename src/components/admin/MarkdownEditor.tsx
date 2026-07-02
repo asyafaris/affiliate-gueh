@@ -23,24 +23,28 @@ export function MarkdownEditor({ name, defaultValue, required, rows = 8, placeho
 
   async function uploadImage(file: File) {
     setUploadStatus("Mengupload gambar...");
-    const formData = new FormData();
-    formData.append("file", file);
-    const response = await fetch("/api/admin/uploads", { method: "POST", body: formData });
-    const result = await response.json() as { url?: string; error?: string };
-    if (!response.ok || !result.url) {
-      setUploadStatus(result.error ?? "Upload gambar gagal.");
-      return;
-    }
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const response = await fetch("/api/admin/uploads", { method: "POST", body: formData });
+      const result = await response.json() as { url?: string; error?: string };
+      if (!response.ok || !result.url) {
+        setUploadStatus(result.error ?? "Upload gambar gagal. Pastikan format JPG, PNG, WEBP, atau GIF dan ukuran maksimal 5MB.");
+        return;
+      }
 
-    const alt = file.name.replace(/\.[^.]+$/, "").replaceAll("-", " ");
-    const imageMarkdown = `\n\n![${alt}](${result.url})\n\n`;
-    setValue((current) => `${current}${imageMarkdown}`);
-    setMode("write");
-    setUploadStatus("Gambar berhasil diupload dan ditambahkan ke konten.");
+      const alt = file.name.replace(/\.[^.]+$/, "").replaceAll("-", " ");
+      const imageMarkdown = `\n\n![${alt}](${result.url})\n\n`;
+      setValue((current) => `${current}${imageMarkdown}`);
+      setMode("write");
+      setUploadStatus("Gambar berhasil diupload dan ditambahkan ke konten.");
+    } catch {
+      setUploadStatus("Upload gambar gagal karena koneksi bermasalah. Coba ulangi sebentar lagi.");
+    }
   }
 
   return (
-    <div className="grid gap-2" data-color-mode="light">
+    <div className="grid min-w-0 gap-2" data-color-mode="light">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-xs leading-5 text-ink/55">Gunakan toolbar atau Markdown untuk mengatur format tulisan.</p>
         <div className="inline-flex w-fit rounded-md border border-line bg-white p-1">
@@ -82,7 +86,7 @@ export function MarkdownEditor({ name, defaultValue, required, rows = 8, placeho
           </div>
         </div>
       ) : null}
-      <div className="overflow-hidden rounded-md border border-line bg-white focus-within:border-moss">
+      <div className="min-w-0 overflow-x-auto overflow-y-hidden rounded-md border border-line bg-white focus-within:border-moss">
         <MDEditor
           value={value}
           onChange={(nextValue) => setValue(nextValue ?? "")}

@@ -32,8 +32,20 @@ export function ExpertSourceForm({ productId, expertSources }: Props) {
   const [message, setMessage] = useState("");
 
   const handleAdd = async () => {
-    if (!newSource.sourceName || !newSource.sourceUrl) {
-      setMessage("Isi nama dan URL");
+    if (!newSource.sourceName.trim()) {
+      setMessage("Nama expert atau channel wajib diisi.");
+      return;
+    }
+    if (!newSource.sourceUrl.trim()) {
+      setMessage("URL sumber wajib diisi.");
+      return;
+    }
+    if (!/^https?:\/\//.test(newSource.sourceUrl.trim())) {
+      setMessage("URL sumber harus lengkap, contoh https://youtube.com/watch?v=...");
+      return;
+    }
+    if (newSource.sourceAuthorFollowers && Number(newSource.sourceAuthorFollowers) < 0) {
+      setMessage("Jumlah followers tidak boleh negatif.");
       return;
     }
 
@@ -52,12 +64,12 @@ export function ExpertSourceForm({ productId, expertSources }: Props) {
       if (result.success && result.data) {
         setSources([...sources, result.data]);
         setNewSource({ sourceType: "YOUTUBE", sourceName: "", sourceUrl: "", sourceAuthorFollowers: "", quote: "" });
-        setMessage("Expert source added");
+        setMessage("Expert source berhasil ditambahkan.");
       } else {
-        setMessage("Error: " + result.error);
+        setMessage(result.error ?? "Expert source gagal ditambahkan. Cek kembali datanya.");
       }
     } catch (error) {
-      setMessage("Error: " + String(error));
+      setMessage("Expert source gagal ditambahkan karena koneksi atau server bermasalah. Coba ulangi sebentar lagi.");
     } finally {
       setLoading(false);
     }
@@ -70,9 +82,12 @@ export function ExpertSourceForm({ productId, expertSources }: Props) {
       const result = await removeExpertSource(sourceId);
       if (result.success) {
         setSources(sources.filter((s) => s.id !== sourceId));
+        setMessage("Expert source berhasil dihapus.");
       } else {
-        setMessage("Error deleting");
+        setMessage(result.error ?? "Expert source gagal dihapus.");
       }
+    } catch {
+      setMessage("Expert source gagal dihapus karena koneksi atau server bermasalah.");
     } finally {
       setLoading(false);
     }
@@ -161,7 +176,7 @@ export function ExpertSourceForm({ productId, expertSources }: Props) {
           <Plus className="h-4 w-4" /> Add Source
         </button>
 
-        {message && <p className={`text-sm ${message.startsWith("Error") ? "text-red-600" : "text-green-600"}`}>{message}</p>}
+        {message && <p className={`text-sm ${message.includes("gagal") || message.includes("wajib") || message.includes("harus") || message.includes("negatif") ? "text-red-600" : "text-green-600"}`}>{message}</p>}
       </div>
     </div>
   );

@@ -32,6 +32,8 @@ const articleTypeLabels: Record<ArticleType, string> = {
   TIPS: "Tips"
 };
 
+const visibleArticleTypes = ARTICLE_TYPES.filter((type) => type !== "GUIDE");
+
 const bestPickStructure = [
   ["Hero", "Title, excerpt, dan cover image menjadi pembuka halaman."],
   ["Metodologi", "Konten artikel bisa menjelaskan cara kurasi, kriteria, dan batasan rekomendasi."],
@@ -56,7 +58,7 @@ export function ArticleForm({
 }) {
   const selected = new Set(article?.products?.map((p) => p.productId));
   const selectedProducts = products.filter((product) => selected.has(product.id));
-  const currentType = article?.articleType ?? defaultType ?? "GUIDE";
+  const currentType = article?.articleType ?? defaultType ?? "REVIEW";
   return (
     <form action={saveArticle} className="grid gap-6">
       <div className="grid gap-6 xl:grid-cols-[1fr_360px]">
@@ -74,7 +76,7 @@ export function ArticleForm({
                 </>
               ) : (
                 <select name="articleType" className={inputClass} defaultValue={currentType}>
-                  {ARTICLE_TYPES.map((type) => <option key={type} value={type}>{articleTypeLabels[type]}</option>)}
+                  {visibleArticleTypes.map((type) => <option key={type} value={type}>{articleTypeLabels[type]}</option>)}
                 </select>
               )}
             </AdminField>
@@ -106,7 +108,7 @@ export function ArticleForm({
         <aside className="grid content-start gap-4">
           <section className="rounded-lg border border-line bg-white p-5">
             <p className="eyebrow">Struktur Best Pick</p>
-            <h2 className="mt-2 font-serif text-2xl font-bold">Mapping halaman publik</h2>
+            <h2 className="mt-2 text-2xl font-bold">Mapping halaman publik</h2>
             <div className="mt-4 grid gap-3">
               {bestPickStructure.map(([title, description]) => (
                 <div key={title} className="rounded-md border border-line bg-paper p-3">
@@ -118,7 +120,7 @@ export function ArticleForm({
           </section>
           <section className="rounded-lg border border-line bg-white p-5">
             <p className="eyebrow">Analisis produk terhubung</p>
-            <h2 className="mt-2 font-serif text-2xl font-bold">{selectedProducts.length} produk dipilih</h2>
+            <h2 className="mt-2 text-2xl font-bold">{selectedProducts.length} produk dipilih</h2>
             <div className="mt-4 grid gap-3">
               {selectedProducts.length ? selectedProducts.map((product, index) => (
                 <div key={product.id} className="rounded-md border border-line bg-paper p-3">

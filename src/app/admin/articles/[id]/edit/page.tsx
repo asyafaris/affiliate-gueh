@@ -14,5 +14,5 @@ export default async function EditArticlePage({ params, searchParams }: { params
     getDb().product.findMany({ include: { brand: true, category: true }, orderBy: { name: "asc" } })
   ]);
   if (!article) notFound();
-  return <AdminShell><div className="card p-6"><h1 className="mb-5 font-serif text-4xl font-bold">Edit artikel</h1><ArticleForm article={article} products={products} returnTo={returnTo} /></div></AdminShell>;
+  return <AdminShell><div className="card p-6"><h1 className="mb-5 text-4xl font-bold">Edit artikel</h1><ArticleForm article={article} products={products} returnTo={returnTo} /></div></AdminShell>;
 }

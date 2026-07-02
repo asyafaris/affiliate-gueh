@@ -1,21 +1,20 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { CheckCircle2, ShieldCheck } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
 import { getDb } from "@/lib/db";
 import { buildMetadata, productJsonLd } from "@/lib/seo";
+import { formatRupiah, parseEvidenceStats } from "@/lib/utils";
 import { Header } from "@/components/public/Header";
 import { Footer } from "@/components/public/Footer";
 import { Breadcrumbs } from "@/components/public/Breadcrumbs";
 import { ProductImageGallery } from "@/components/public/ProductImageGallery";
 import { BestForBadge } from "@/components/public/BestForBadge";
-import { PriceEstimate } from "@/components/public/PriceEstimate";
 import { AffiliateButtonGroup } from "@/components/public/AffiliateButtonGroup";
 import { ProsConsList } from "@/components/public/ProsConsList";
-import { SpecsTable } from "@/components/public/SpecsTable";
-import { DisclosureBox } from "@/components/public/DisclosureBox";
 import { ProductGrid } from "@/components/public/ProductGrid";
-import { ExpertSourcesList } from "@/components/public/ExpertSourcesList";
 import { MarkdownText } from "@/components/public/MarkdownText";
+import { VerdictPanel } from "@/components/shared/VerdictPanel";
+import { FeatureMatrix } from "@/components/shared/FeatureMatrix";
 import type { ArticleSummary, ProductCardData } from "@/types/domain";
 
 export const dynamic = "force-dynamic";
@@ -37,7 +36,7 @@ function inferTrustLabels(links: AffiliateLink[]) {
   return [...new Set(labels)].slice(0, 4);
 }
 
-function softenAffiliateLabels(links: AffiliateLink[]) {
+function softenAffiliateLabels<T extends { buttonLabel: string }>(links: T[]) {
   return links.map((link, index) => ({
     ...link,
     buttonLabel: index === 0 ? "Cek harga terbaru" : index === 1 ? "Lihat toko terpercaya" : "Cek di marketplace"
@@ -83,102 +82,128 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const product = await getProduct(slug);
   if (!product?.isPublished) notFound();
   const [relatedProducts, relatedArticles]: [ProductCardData[], ArticleSummary[]] = await Promise.all([
-    getDb().product.findMany({ where: { categoryId: product.categoryId, isPublished: true, NOT: { id: product.id } }, include: { brand: true, category: true, images: { where: { isPrimary: true }, take: 1 } }, take: 3 }),
+    getDb().product.findMany({
+      where: { categoryId: product.categoryId, isPublished: true, NOT: { id: product.id } },
+      include: {
+        brand: true,
+        category: true,
+        images: { where: { isPrimary: true }, take: 1 },
+        affiliateLinks: { where: { isActive: true }, orderBy: { sortOrder: "asc" }, take: 1 }
+      },
+      take: 4
+    }),
     getDb().article.findMany({ where: { isPublished: true, products: { some: { productId: product.id } } }, take: 4 })
   ]);
   const trustLabels = inferTrustLabels(product.affiliateLinks);
   const affiliateLinks = softenAffiliateLabels(product.affiliateLinks);
-  const topPros = product.prosCons.filter((item) => item.type === "PRO").slice(0, 3);
-  const topSpecs = product.specs.slice(0, 3);
+  const evidenceStats = parseEvidenceStats(product.evidenceStats);
+
   return (
     <>
       <Header />
       <main className="container-page grid gap-10 py-10">
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd(product)) }} />
         <Breadcrumbs items={[{ label: "Beranda", href: "/" }, { label: product.category.name, href: `/kategori/${product.category.slug}` }, { label: product.name, href: `/produk/${product.slug}` }]} />
-        <section className="grid gap-8 lg:grid-cols-[0.95fr_1.05fr]">
-          <ProductImageGallery images={product.images} title={product.name} />
-          <div>
-            <p className="eyebrow">{product.brand.name} / {product.category.name}</p>
-            <h1 className="mt-2 font-serif text-4xl font-bold leading-tight">{product.name}</h1>
-            <MarkdownText content={product.shortDescription} className="mt-4 text-lg leading-8 text-ink/70 prose-p:m-0" />
-            <div className="mt-5 flex flex-wrap items-center gap-3">
-              <BestForBadge>{product.bestFor}</BestForBadge>
-              <span className="text-sm text-ink/60">Estimasi <PriceEstimate value={product.priceEstimate} /></span>
-            </div>
-            <div className="mt-6 rounded-lg border border-line bg-white p-5">
-              <p className="eyebrow">Quick verdict</p>
-              <MarkdownText content={product.editorialSummary} className="mt-2 leading-7 text-ink/75 prose-p:m-0" />
-            </div>
-            <div className="mt-5 flex flex-wrap gap-2">
-              {trustLabels.map((label) => (
-                <span key={label} className="inline-flex items-center gap-1 rounded-full border border-line bg-white px-3 py-1.5 text-xs font-semibold text-ink/70">
-                  <ShieldCheck className="h-3.5 w-3.5 text-moss" />
-                  {label}
-                </span>
-              ))}
-            </div>
-            <div className="mt-5">
+
+        <section className="grid gap-8 lg:grid-cols-[400px_1fr] lg:items-start">
+          {/* Sticky left: gallery + buy box */}
+          <div className="grid gap-4 lg:sticky lg:top-[76px] lg:self-start">
+            <ProductImageGallery images={product.images} title={product.name} />
+            <div className="card grid gap-3 p-5">
+              <div className="flex items-baseline gap-2">
+                <span className="text-2xl font-bold text-primary">{formatRupiah(product.priceEstimate)}</span>
+                {product.compareAtPrice && product.compareAtPrice > product.priceEstimate ? (
+                  <span className="text-sm text-neutral-400 line-through">{formatRupiah(product.compareAtPrice)}</span>
+                ) : null}
+              </div>
               <AffiliateButtonGroup links={affiliateLinks} sourcePageType="product" sourcePageSlug={product.slug} />
             </div>
           </div>
-        </section>
-        <section className="grid gap-6 rounded-lg border border-line bg-white p-6 lg:grid-cols-[1fr_0.8fr]">
-          <div>
-            <p className="eyebrow">Alasan rekomendasi</p>
-            <h2 className="mt-2 font-serif text-3xl font-bold">Kenapa produk ini masuk rekomendasi?</h2>
-            <MarkdownText content={product.editorialSummary} className="mt-4 leading-7 text-ink/72 prose-p:m-0" />
-            <p className="mt-3 leading-7 text-ink/72">
-              Produk ini kami tempatkan untuk kebutuhan {product.bestFor.toLowerCase()} dalam kategori {product.category.name.toLowerCase()}, dengan mempertimbangkan brand {product.brand.name}, catatan pros/cons, spesifikasi dasar, dan sumber pembelian yang tersedia.
-            </p>
-          </div>
-          <div className="grid gap-3">
-            {topPros.map((item) => (
-              <p key={item.content} className="flex gap-2 rounded-md bg-leaf/10 p-3 text-sm leading-6 text-ink/75">
-                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-moss" />
-                {item.content}
-              </p>
-            ))}
-            {topSpecs.map((spec) => (
-              <p key={`${spec.label}-${spec.value}`} className="rounded-md border border-line bg-paper p-3 text-sm leading-6 text-ink/70">
-                <strong>{spec.label}:</strong> {spec.value}
-              </p>
-            ))}
-          </div>
-        </section>
-        {product.expertSources.length > 0 && (
-          <section className="rounded-lg border border-line bg-paper p-6">
-            <ExpertSourcesList sources={product.expertSources} />
-          </section>
-        )}
-        <section className="grid gap-6 lg:grid-cols-[1fr_0.75fr]">
-          <div className="grid gap-8">
+
+          {/* Scrolling right: verdict + content */}
+          <div className="grid gap-6">
             <div>
-              <h2 className="font-serif text-3xl font-bold">Kelebihan dan kekurangan</h2>
+              <p className="eyebrow">{product.brand.name} / {product.category.name}</p>
+              <h1 className="mt-2 text-4xl leading-tight">{product.name}</h1>
+              <MarkdownText content={product.shortDescription} className="mt-4 text-lg leading-8 text-neutral-600 prose-p:m-0" />
+              <div className="mt-5 flex flex-wrap items-center gap-2">
+                <BestForBadge>{product.bestFor}</BestForBadge>
+                {trustLabels.map((label) => (
+                  <span key={label} className="badge border border-neutral-200 bg-white text-neutral-600">
+                    <ShieldCheck className="h-3.5 w-3.5 text-accent-dark" />
+                    {label}
+                  </span>
+                ))}
+                {product.expertSources.slice(0, 3).map((source) => (
+                  <a
+                    key={source.id}
+                    href={source.sourceUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="badge bg-accent-tint text-accent-dark hover:bg-accent/20"
+                  >
+                    {source.sourceType === "YOUTUBE" ? "🎬" : source.sourceType === "BLOG" ? "📝" : "💬"} {source.sourceName}
+                  </a>
+                ))}
+              </div>
+            </div>
+
+            <VerdictPanel eyebrow="Rekomendasi singkat" score={product.score} headline="Kenapa produk ini masuk rekomendasi?">
+              <MarkdownText content={product.editorialSummary} className="prose-p:m-0" />
+            </VerdictPanel>
+
+            {evidenceStats.length || product.hoursTested ? (
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                {product.hoursTested ? (
+                  <div className="card p-4 text-center">
+                    <p className="text-2xl font-bold text-primary">{product.hoursTested} jam</p>
+                    <p className="mt-1 text-xs text-neutral-500">Waktu pengujian</p>
+                  </div>
+                ) : null}
+                {evidenceStats.map((stat) => (
+                  <div key={stat.label} className="card p-4 text-center">
+                    <p className="text-2xl font-bold text-primary">{stat.value}</p>
+                    <p className="mt-1 text-xs text-neutral-500">{stat.label}</p>
+                  </div>
+                ))}
+              </div>
+            ) : null}
+
+            <div>
+              <h2 className="text-2xl">Kelebihan dan kekurangan</h2>
               <div className="mt-4"><ProsConsList items={product.prosCons} /></div>
             </div>
+
             <div>
-              <h2 className="font-serif text-3xl font-bold">Spesifikasi penting</h2>
-              <div className="mt-4"><SpecsTable specs={product.specs} /></div>
+              <h2 className="text-2xl">Spesifikasi penting</h2>
+              <div className="mt-4">
+                <FeatureMatrix
+                  products={[{ id: product.id, name: product.name, priceEstimate: product.priceEstimate, specs: product.specs }]}
+                />
+              </div>
             </div>
+
+            <p className="text-xs text-neutral-400">Terakhir diperbarui: {product.updatedAt.toLocaleDateString("id-ID")}</p>
           </div>
-          <aside className="grid content-start gap-4">
-            <DisclosureBox />
-            <div className="card p-5 text-sm text-ink/65">Terakhir diperbarui: {product.updatedAt.toLocaleDateString("id-ID")}</div>
-          </aside>
         </section>
+
         <section className="grid gap-4">
-          <h2 className="font-serif text-3xl font-bold">Produk terkait</h2>
+          <h2 className="text-3xl">Produk terkait</h2>
           <ProductGrid products={relatedProducts} />
         </section>
+
         {relatedArticles.length ? (
-        <section className="grid gap-3">
-          <h2 className="font-serif text-2xl font-bold">Artikel terkait</h2>
-          {relatedArticles.map((article) => <Link key={article.slug} href={`/artikel/${article.slug}`} className="card p-4 font-semibold hover:text-moss">{article.title}</Link>)}
-        </section>
+          <section className="grid gap-3">
+            <h2 className="text-2xl">Artikel terkait</h2>
+            {relatedArticles.map((article) => (
+              <Link key={article.slug} href={`/artikel/${article.slug}`} className="card p-4 font-semibold hover:text-accent-dark">
+                {article.title}
+              </Link>
+            ))}
+          </section>
         ) : null}
       </main>
-      <div className="fixed inset-x-0 bottom-0 z-50 border-t border-line bg-white p-3 md:hidden">
+      <div className="fixed inset-x-0 bottom-0 z-50 border-t border-neutral-200 bg-white p-3 md:hidden">
         <AffiliateButtonGroup links={affiliateLinks.slice(0, 1)} sourcePageType="product_sticky" sourcePageSlug={product.slug} />
       </div>
       <Footer />

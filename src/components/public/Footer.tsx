@@ -1,28 +1,25 @@
 import Link from "next/link";
 
+const links = [
+  { href: "/tentang", label: "Tentang" },
+  { href: "/kontak", label: "Kontak" }
+];
+
 export function Footer() {
   return (
-    <footer className="border-t border-line bg-white">
-      <div className="container-page grid gap-8 py-10 md:grid-cols-[1.5fr_1fr_1fr]">
-        <div>
-          <p className="font-serif text-xl font-bold">Produk Worth It</p>
-          <p className="mt-3 max-w-md text-sm leading-6 text-ink/70">
-            Platform kurasi produk original dan worth it untuk membantu kamu memilih barang yang lebih aman, relevan, dan sesuai kebutuhan.
-          </p>
+    <footer className="border-t border-neutral-200 bg-neutral-50">
+      <div className="container-page flex flex-col gap-4 py-5 text-xs text-neutral-500 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-5">
+          <span className="text-sm font-bold text-primary">worthgoods</span>
+          <nav className="flex flex-wrap gap-x-5 gap-y-2">
+            {links.map((link) => (
+              <Link key={link.label} href={link.href} className="transition hover:text-primary">
+                {link.label}
+              </Link>
+            ))}
+          </nav>
         </div>
-        <div className="grid gap-2 text-sm">
-          <Link href="/">Home</Link>
-          <Link href="/kategori">Kategori</Link>
-          <Link href="/best">Best Pick</Link>
-          <Link href="/bandingkan">Bandingkan</Link>
-          <Link href="/#panduan">Artikel</Link>
-          <Link href="/tentang">Tentang</Link>
-          <Link href="/kontak">Kontak</Link>
-          <Link href="/affiliate-disclosure">Disclosure</Link>
-        </div>
-        <p className="text-sm leading-6 text-ink/60">
-          Website ini menggunakan beberapa tautan affiliate. Rekomendasi tetap disusun berdasarkan kurasi editorial, kecocokan kebutuhan, dan informasi produk yang tersedia.
-        </p>
+        <span>&copy; {new Date().getFullYear()}</span>
       </div>
     </footer>
   );

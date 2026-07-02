@@ -11,9 +11,13 @@ export type ProductCardData = {
   shortDescription: string;
   bestFor: string;
   priceEstimate: number;
+  compareAtPrice?: number | null;
+  score?: number | null;
+  reviewCount?: number;
   brand?: { name: string };
   category?: { name: string };
   images?: { imageUrl: string; altText: string }[];
+  affiliateLinks?: { redirectCode: string; merchantName: string; buttonLabel: string; isPrimary: boolean; price?: number | null }[];
 };
 
 export type CategorySummary = {
@@ -50,6 +54,7 @@ export type AffiliateLinkSummary = {
   redirectCode: string;
   isActive?: boolean;
   isPrimary: boolean;
+  price?: number | null;
 };
 
 export type ProsConsItem = {
@@ -67,7 +72,8 @@ export type SpecItem = {
   sortOrder?: number;
 };
 
-export type RankedProduct = ProductCardData & {
+export type RankedProduct = Omit<ProductCardData, "id"> & {
+  id: string;
   editorialSummary: string;
   brand: { name: string };
   prosCons: ProsConsItem[];

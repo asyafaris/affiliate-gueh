@@ -64,7 +64,8 @@ async function main() {
     data: {
       email: process.env.ADMIN_EMAIL ?? "admin@affiliategueh.local",
       passwordHash: await bcrypt.hash(process.env.ADMIN_PASSWORD ?? "admin12345", 12),
-      name: "Editor Produk Worth It"
+      name: "Rani Prawira",
+      title: "Editor worthgoods"
     }
   });
 
@@ -209,7 +210,7 @@ async function main() {
       data: {
         subjectType: "article",
         subjectId: article.id,
-        seoTitle: `${title} | Produk Worth It`,
+        seoTitle: `${title} | worthgoods`,
         metaDescription: article.excerpt,
         ogTitle: title,
         ogDescription: article.excerpt,
