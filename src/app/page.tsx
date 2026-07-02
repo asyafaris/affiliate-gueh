@@ -12,6 +12,8 @@ import { MarkdownText } from "@/components/public/MarkdownText";
 import { ImagePlaceholder } from "@/components/shared/ImagePlaceholder";
 import type { ProductCardData } from "@/types/domain";
 
+export const dynamic = "force-dynamic";
+
 // ISR: Revalidate every 3600 seconds (1 hour)
 // Homepage content (categories, products, articles) can be static
 // On-demand revalidation when admin publishes content
