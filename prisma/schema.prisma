@@ -1,0 +1,278 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  EDITOR
+}
+
+enum ProsConsType {
+  PRO
+  CON
+}
+
+enum ArticleType {
+  GUIDE
+  REVIEW
+  COMPARISON
+  BEST_PICKS
+  TIPS
+}
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String
+  name         String
+  role         UserRole  @default(ADMIN)
+  isActive     Boolean   @default(true)
+  lastLoginAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  articles     Article[]
+}
+
+model Category {
+  id          String            @id @default(cuid())
+  name        String
+  slug        String            @unique
+  description String
+  imageUrl    String?
+  parentId    String?
+  parent      Category?         @relation("CategoryTree", fields: [parentId], references: [id], onDelete: SetNull)
+  children    Category[]        @relation("CategoryTree")
+  featured    Boolean           @default(false)
+  sortOrder   Int               @default(0)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  products    Product[]
+  articles    ArticleCategory[]
+
+  @@index([slug])
+  @@index([featured, sortOrder])
+}
+
+model Brand {
+  id          String    @id @default(cuid())
+  name        String
+  slug        String    @unique
+  websiteUrl  String?
+  description String?
+  logoUrl     String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  products    Product[]
+}
+
+model Product {
+  id                String                 @id @default(cuid())
+  categoryId        String
+  brandId           String
+  name              String
+  slug              String                 @unique
+  shortDescription  String
+  editorialSummary  String
+  bestFor           String
+  priceEstimate     Int
+  currency          String                 @default("IDR")
+  isFeatured        Boolean                @default(false)
+  isPublished       Boolean                @default(false)
+  publishedAt       DateTime?
+  createdAt         DateTime               @default(now())
+  updatedAt         DateTime               @updatedAt
+  category          Category               @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  brand             Brand                  @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  images            ProductImage[]
+  affiliateLinks    ProductAffiliateLink[]
+  specs             ProductSpec[]
+  prosCons          ProductProsCons[]
+  articlePlacements ArticleProduct[]
+  clicks            AffiliateClick[]
+  expertSources     ExpertSource[]
+
+  @@index([slug])
+  @@index([categoryId, isPublished])
+  @@index([brandId])
+  @@index([isFeatured, isPublished])
+}
+
+model ProductImage {
+  id        String   @id @default(cuid())
+  productId String
+  imageUrl  String
+  altText   String
+  caption   String?
+  sortOrder Int      @default(0)
+  isPrimary Boolean  @default(false)
+  createdAt DateTime @default(now())
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId, sortOrder])
+}
+
+model ProductAffiliateLink {
+  id           String           @id @default(cuid())
+  productId    String
+  merchantName String
+  buttonLabel  String
+  affiliateUrl String
+  redirectCode String           @unique
+  isPrimary    Boolean          @default(false)
+  isActive     Boolean          @default(true)
+  sortOrder    Int              @default(0)
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  product      Product          @relation(fields: [productId], references: [id], onDelete: Cascade)
+  clicks       AffiliateClick[]
+
+  @@index([redirectCode])
+  @@index([productId, isActive])
+}
+
+model ProductSpec {
+  id        String  @id @default(cuid())
+  productId String
+  specGroup String
+  label     String
+  value     String
+  sortOrder Int     @default(0)
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId, sortOrder])
+}
+
+model ProductProsCons {
+  id        String       @id @default(cuid())
+  productId String
+  type      ProsConsType
+  content   String
+  sortOrder Int          @default(0)
+  product   Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId, type])
+}
+
+model Article {
+  id                String            @id @default(cuid())
+  authorId          String
+  title             String
+  slug              String            @unique
+  excerpt           String
+  coverImageUrl     String?
+  contentMd         String
+  articleType       ArticleType
+  isPublished       Boolean           @default(false)
+  publishedAt       DateTime?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  author            User              @relation(fields: [authorId], references: [id], onDelete: Restrict)
+  categories        ArticleCategory[]
+  products          ArticleProduct[]
+
+  @@index([slug])
+  @@index([articleType, isPublished])
+}
+
+model ArticleCategory {
+  id         String   @id @default(cuid())
+  articleId  String
+  categoryId String
+  article    Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@unique([articleId, categoryId])
+}
+
+model ArticleProduct {
+  id            String  @id @default(cuid())
+  articleId     String
+  productId     String
+  placementNote String?
+  sortOrder     Int     @default(0)
+  article       Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  product       Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([articleId, productId])
+  @@index([articleId, sortOrder])
+}
+
+model HomepageSection {
+  id         String   @id @default(cuid())
+  sectionKey String   @unique
+  title      String
+  subtitle   String?
+  payload    Json
+  isActive   Boolean  @default(true)
+  sortOrder  Int      @default(0)
+  updatedAt  DateTime @updatedAt
+}
+
+model AffiliateClick {
+  id               String                 @id @default(cuid())
+  productId        String
+  affiliateLinkId  String
+  sourcePageType   String?
+  sourcePageSlug   String?
+  referrer         String?
+  utmSource        String?
+  utmMedium        String?
+  utmCampaign      String?
+  deviceType       String?
+  clickedAt        DateTime               @default(now())
+  product          Product                @relation(fields: [productId], references: [id], onDelete: Cascade)
+  affiliateLink    ProductAffiliateLink   @relation(fields: [affiliateLinkId], references: [id], onDelete: Cascade)
+
+  @@index([clickedAt])
+  @@index([productId, clickedAt])
+  @@index([affiliateLinkId, clickedAt])
+  @@index([sourcePageType, sourcePageSlug])
+}
+
+model SeoMetadata {
+  id              String   @id @default(cuid())
+  subjectType     String
+  subjectId       String
+  seoTitle        String
+  metaDescription String
+  canonicalUrl    String?
+  ogTitle         String?
+  ogDescription   String?
+  ogImageUrl      String?
+  robots          String?
+  schemaHint      String?
+  updatedAt       DateTime @updatedAt
+
+  @@unique([subjectType, subjectId])
+  @@index([subjectType, subjectId])
+}
+
+model ExpertSource {
+  id                    String   @id @default(cuid())
+  productId             String
+  sourceType            String
+  sourceName            String
+  sourceUrl             String
+  sourceAuthorFollowers Int?
+  quote                 String?
+  addedAt               DateTime @default(now())
+  product               Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+  @@index([sourceType])
+}
+
+model EmailSubscriber {
+  id             String    @id @default(cuid())
+  email          String    @unique
+  source         String    @default("unknown")
+  subscribedAt   DateTime  @default(now())
+  unsubscribedAt DateTime?
+
+  @@index([subscribedAt])
+}
