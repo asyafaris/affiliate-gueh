@@ -45,6 +45,32 @@ Admin login defaults from `.env.example`:
 - Email: `admin@affiliategueh.local`
 - Password: `admin12345`
 
+## Docker
+
+Build and run the app in a container:
+
+```bash
+docker build -t affiliate-gueh .
+docker run --env-file .env -p 3000:3000 affiliate-gueh
+```
+
+Use Docker Compose for a local PostgreSQL database:
+
+```bash
+docker compose up --build
+```
+
+The app will be available at `http://localhost:3000`.
+
+## Vercel Deployment
+
+1. Connect the repository to Vercel from GitHub.
+2. Set the required environment variables in the Vercel project settings:
+   - `DATABASE_URL`
+   - `NEXTAUTH_SECRET`
+   - `NEXT_PUBLIC_SITE_URL`
+3. Deploy from the `master` branch.
+
 ## Important Routes
 
 - Public: `/`, `/kategori/[slug]`, `/produk/[slug]`, `/artikel/[slug]`, `/best/[slug]`, `/bandingkan/[slug]`
