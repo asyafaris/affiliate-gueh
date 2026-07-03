@@ -25,7 +25,7 @@ npm install
 cp .env.example .env
 ```
 
-3. Update `DATABASE_URL`, `NEXTAUTH_SECRET`, and `NEXT_PUBLIC_SITE_URL`.
+3. Update `DATABASE_URL`, `DIRECT_URL`, `NEXTAUTH_SECRET`, and `NEXT_PUBLIC_SITE_URL`.
 
 4. Run migration and seed:
 
@@ -34,7 +34,21 @@ npx prisma migrate dev --name init
 npm run seed
 ```
 
-5. Start local development:
+5. To migrate local database data and uploaded assets to a Supabase cloud database and Cloudinary:
+
+```bash
+npm run migrate:cloud
+```
+
+Set environment variables in `.env` or shell before running:
+- `SOURCE_DATABASE_URL` (local source database)
+- `TARGET_DATABASE_URL` or `SUPABASE_DATABASE_URL` (Supabase cloud database)
+- `CLOUDINARY_CLOUD_NAME`
+- `CLOUDINARY_API_KEY`
+- `CLOUDINARY_API_SECRET`
+- `CLOUDINARY_UPLOAD_FOLDER` (optional)
+
+6. Start local development:
 
 ```bash
 npm run dev
@@ -67,6 +81,7 @@ The app will be available at `http://localhost:3000`.
 1. Connect the repository to Vercel from GitHub.
 2. Set the required environment variables in the Vercel project settings:
    - `DATABASE_URL`
+   - `DIRECT_URL`
    - `NEXTAUTH_SECRET`
    - `NEXT_PUBLIC_SITE_URL`
 3. Deploy from the `master` branch.
@@ -80,4 +95,4 @@ The app will be available at `http://localhost:3000`.
 
 ## Deployment Notes
 
-Use a Supabase-compatible PostgreSQL database and set the same env vars in Vercel. The site does not checkout users locally; affiliate CTAs go through `/go/[code]`, log the click, then redirect to the merchant URL.
+Use a Supabase-compatible PostgreSQL database and set the same env vars in Vercel. For Supabase with Prisma, use the pooled connection string in `DATABASE_URL` and the session/direct connection string in `DIRECT_URL`. The site does not checkout users locally; affiliate CTAs go through `/go/[code]`, log the click, then redirect to the merchant URL.
