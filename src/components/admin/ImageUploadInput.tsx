@@ -61,7 +61,7 @@ export function ImageUploadInput({ name, defaultValue, required, placeholder }: 
         </button>
       </div>
       <p className="text-xs leading-5 text-ink/55">
-        Isi URL manual atau upload gambar dari komputer. Gambar tersimpan di folder public uploads.
+        Isi URL manual atau upload gambar dari komputer. Gambar akan disimpan di Cloudinary.
       </p>
       {status ? <p className="text-xs font-medium text-moss">{status}</p> : null}
     </div>

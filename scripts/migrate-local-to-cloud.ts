@@ -1,10 +1,46 @@
+import 'dotenv/config';
 import * as path from "path";
 import { promises as fs } from "fs";
 import { PrismaClient } from "@prisma/client";
 import { v2 as cloudinary } from "cloudinary";
 
+// Fallback: simple synchronous .env loader in case dotenv isn't available in the runtime
+function loadDotenvFileSync() {
+  try {
+    // Load .env.local first (created by Vercel CLI) then fallback to .env
+    const candidates = [".env.local", ".env"];
+    let content = "";
+    for (const file of candidates) {
+      const envPath = path.join(process.cwd(), file);
+      try {
+        content = require("fs").readFileSync(envPath, "utf8");
+        break;
+      } catch (e) {
+        // continue
+      }
+    }
+    if (!content) return;
+    for (const rawLine of content.split(/\r?\n/)) {
+      const line = rawLine.trim();
+      if (!line || line.startsWith("#")) continue;
+      const eq = line.indexOf("=");
+      if (eq === -1) continue;
+      const key = line.slice(0, eq).trim();
+      let val = line.slice(eq + 1).trim();
+      if ((val.startsWith("\"") && val.endsWith("\"")) || (val.startsWith("'") && val.endsWith("'"))) {
+        val = val.slice(1, -1);
+      }
+      if (process.env[key] === undefined) process.env[key] = val;
+    }
+  } catch (err) {
+    // ignore if no .env file
+  }
+}
+
+loadDotenvFileSync();
+
 const sourceUrl = process.env.SOURCE_DATABASE_URL ?? process.env.DATABASE_URL;
-const targetUrl = process.env.TARGET_DATABASE_URL ?? process.env.SUPABASE_DATABASE_URL;
+const targetUrl = process.env.TARGET_DATABASE_URL ?? process.env.DATABASE_URL;
 const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
 const apiKey = process.env.CLOUDINARY_API_KEY;
 const apiSecret = process.env.CLOUDINARY_API_SECRET;
@@ -16,7 +52,7 @@ if (!sourceUrl) {
 }
 
 if (!targetUrl) {
-  throw new Error("TARGET_DATABASE_URL or SUPABASE_DATABASE_URL is required.");
+  throw new Error("TARGET_DATABASE_URL or DATABASE_URL is required.");
 }
 
 if (!cloudName || !apiKey || !apiSecret) {
@@ -174,7 +210,7 @@ async function uploadOrphanLocalImages() {
   }
 }
 
-async function migrateModel<T>(modelName: string, rows: T[], createMany: (args: { data: T[]; skipDuplicates: boolean }) => Promise<unknown>) {
+async function migrateModel<T extends Record<string, unknown>>(modelName: string, rows: T[], createMany: (args: any) => Promise<unknown>) {
   console.log(`Migrating ${rows.length} ${modelName} row(s)...`);
   if (!rows.length) {
     console.log(`  No ${modelName} rows found.`);
@@ -182,7 +218,7 @@ async function migrateModel<T>(modelName: string, rows: T[], createMany: (args: 
   }
 
   try {
-    await createMany({ data: rows, skipDuplicates: true });
+    await createMany({ data: rows as any, skipDuplicates: true });
     console.log(`  ${modelName} migrated.`);
   } catch (error) {
     console.error(`Failed migrating ${modelName}:`, error instanceof Error ? error.message : error);

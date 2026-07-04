@@ -34,7 +34,7 @@ npx prisma migrate dev --name init
 npm run seed
 ```
 
-5. To migrate local database data and uploaded assets to a Supabase cloud database and Cloudinary:
+5. To migrate local database data and uploaded assets to a Neon cloud database and Cloudinary:
 
 ```bash
 npm run migrate:cloud
@@ -42,7 +42,7 @@ npm run migrate:cloud
 
 Set environment variables in `.env` or shell before running:
 - `SOURCE_DATABASE_URL` (local source database)
-- `TARGET_DATABASE_URL` or `SUPABASE_DATABASE_URL` (Supabase cloud database)
+- `TARGET_DATABASE_URL` (Neon cloud database)
 - `CLOUDINARY_CLOUD_NAME`
 - `CLOUDINARY_API_KEY`
 - `CLOUDINARY_API_SECRET`
@@ -95,4 +95,4 @@ The app will be available at `http://localhost:3000`.
 
 ## Deployment Notes
 
-Use a Supabase-compatible PostgreSQL database and set the same env vars in Vercel. For Supabase with Prisma, use the pooled connection string in `DATABASE_URL` and the session/direct connection string in `DIRECT_URL`. The site does not checkout users locally; affiliate CTAs go through `/go/[code]`, log the click, then redirect to the merchant URL.
+Use a Neon-compatible PostgreSQL database and set the same env vars in Vercel. Use the Neon connection string in `DATABASE_URL` and `DIRECT_URL`. The site does not checkout users locally; affiliate CTAs go through `/go/[code]`, log the click, then redirect to the merchant URL.

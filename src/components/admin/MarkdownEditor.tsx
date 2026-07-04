@@ -66,7 +66,7 @@ export function MarkdownEditor({ name, defaultValue, required, rows = 8, placeho
       </div>
       {imageHint ? (
         <div className="rounded-md border border-line bg-paper px-3 py-2 text-xs leading-5 text-ink/60">
-          <p>Untuk menambahkan gambar di bagian konten atau per poin, gunakan format Markdown: <code>![deskripsi gambar](https://url-gambar)</code>.</p>
+          <p>Untuk menambahkan gambar di bagian konten atau per poin, gunakan format Markdown: <code>![deskripsi gambar](https://url-gambar)</code>. Upload di sini akan tersimpan ke Cloudinary.</p>
           <div className="mt-2 flex flex-wrap items-center gap-2">
             <input
               ref={fileInputRef}
