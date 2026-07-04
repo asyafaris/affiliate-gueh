@@ -90,13 +90,13 @@ export function InteractiveComparison({
                 key={category.id}
                 type="button"
                 onClick={() => selectCategory(category.id)}
-                className={cn("card min-h-44 p-5 text-left", active && "border-accent ring-2 ring-accent/20")}
+                className={cn("card min-h-44 min-w-0 p-5 text-left", active && "border-accent ring-2 ring-accent/20")}
               >
                 <div className="flex items-start justify-between gap-3">
                   <span className="badge bg-accent-tint text-accent-dark">{category.productCount} produk</span>
                   {active ? <Check className="h-5 w-5 text-accent-dark" /> : null}
                 </div>
-                <h3 className="mt-4 text-2xl">{category.name}</h3>
+                <h3 className="mt-4 break-words text-2xl">{category.name}</h3>
                 <p className="mt-3 line-clamp-3 text-sm leading-6 text-neutral-600">{category.description}</p>
               </button>
             );
@@ -125,15 +125,15 @@ export function InteractiveComparison({
               <p className="text-sm font-semibold">Produk terpilih: {selectedProducts.length}/4</p>
               <p className="text-xs text-neutral-500">Minimal 2 produk diperlukan untuk menampilkan perbandingan.</p>
             </div>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex min-w-0 flex-wrap gap-2">
               {selectedProducts.length ? selectedProducts.map((product) => (
                 <button
                   key={product.id}
                   type="button"
                   onClick={() => toggleProduct(product)}
-                  className="inline-flex items-center gap-2 rounded-full border-2 border-accent bg-accent-tint px-3 py-1.5 text-xs font-semibold text-accent-dark"
+                  className="inline-flex max-w-full items-center gap-2 rounded-full border-2 border-accent bg-accent-tint px-3 py-1.5 text-left text-xs font-semibold text-accent-dark"
                 >
-                  {product.name}
+                  <span className="min-w-0 break-words">{product.name}</span>
                   <X className="h-3.5 w-3.5" />
                 </button>
               )) : <span className="text-sm text-neutral-500">Belum ada produk dipilih.</span>}
@@ -151,13 +151,13 @@ export function InteractiveComparison({
                 type="button"
                 onClick={() => toggleProduct(product)}
                 disabled={disabled}
-                className={cn("card p-5 text-left disabled:cursor-not-allowed disabled:opacity-50", selected && "border-accent ring-2 ring-accent/20")}
+                className={cn("card min-w-0 p-5 text-left disabled:cursor-not-allowed disabled:opacity-50", selected && "border-accent ring-2 ring-accent/20")}
               >
                 <div className="flex items-start justify-between gap-3">
                   <span className="text-xs font-semibold text-accent-dark">{product.brand.name}</span>
                   {selected ? <Check className="h-5 w-5 text-accent-dark" /> : null}
                 </div>
-                <h3 className="mt-3 text-2xl">{product.name}</h3>
+                <h3 className="mt-3 break-words text-2xl">{product.name}</h3>
                 <p className="mt-2 line-clamp-2 text-sm leading-6 text-neutral-600">{product.shortDescription}</p>
                 <p className="mt-3 text-sm font-semibold text-primary">{formatRupiah(product.priceEstimate)}</p>
                 <p className="mt-2 text-xs leading-5 text-neutral-500">Cocok untuk: {product.bestFor}</p>
@@ -198,17 +198,17 @@ export function InteractiveComparison({
                 </div>
               </VerdictPanel>
 
-              <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-4">
+              <div className="grid items-start gap-4 xl:grid-cols-2">
                 {selectedProducts.map((product) => (
-                  <article key={product.id} className="card relative grid gap-4 p-5">
+                  <article key={product.id} className="card relative flex min-w-0 flex-col gap-4 p-5">
                     {product.id === verdict.worthIt?.id ? (
                       <span className="badge absolute -top-2.5 left-4 rounded-full bg-primary text-white">
                         <Crown className="h-3 w-3" /> Winner
                       </span>
                     ) : null}
-                    <div>
+                    <div className="min-w-0">
                       <p className="text-xs font-semibold text-accent-dark">{product.brand.name} / {product.category.name}</p>
-                      <h3 className="mt-2 text-2xl">{product.name}</h3>
+                      <h3 className="mt-2 break-words text-2xl">{product.name}</h3>
                       <p className="mt-3 text-sm leading-6 text-neutral-600">{product.editorialSummary}</p>
                     </div>
                     <div className="rounded-control bg-accent-tint p-3">
@@ -220,13 +220,14 @@ export function InteractiveComparison({
                       <strong>{formatRupiah(product.priceEstimate)}</strong>
                     </div>
                     <ProsConsMini items={product.prosCons} />
-                    <div className="grid gap-2">
+                    <div className="grid justify-items-start gap-2 pt-2">
                       {product.affiliateLinks.length ? product.affiliateLinks.map((link) => (
                         <MerchantCta
                           key={link.id}
                           link={link}
                           sourcePageType="interactive_comparison"
                           sourcePageSlug={product.slug}
+                          compact
                         />
                       )) : <p className="text-sm text-neutral-500">Link pembelian belum tersedia.</p>}
                     </div>
@@ -265,13 +266,13 @@ function ProsConsMini({ items }: { items: { type: "PRO" | "CON"; content: string
       <div>
         <p className="font-semibold text-accent-dark">Kelebihan</p>
         <ul className="mt-1 grid gap-1 text-neutral-600">
-          {pros.map((item) => <li key={item.content}>+ {item.content}</li>)}
+          {pros.map((item) => <li key={item.content} className="break-words">+ {item.content}</li>)}
         </ul>
       </div>
       <div>
         <p className="font-semibold text-warn">Kekurangan</p>
         <ul className="mt-1 grid gap-1 text-neutral-600">
-          {cons.map((item) => <li key={item.content}>- {item.content}</li>)}
+          {cons.map((item) => <li key={item.content} className="break-words">- {item.content}</li>)}
         </ul>
       </div>
     </div>

@@ -51,12 +51,14 @@ export function MerchantCta({
   sourcePageType,
   sourcePageSlug,
   isCheapest,
+  compact,
   className
 }: {
   link: LinkData;
   sourcePageType: string;
   sourcePageSlug: string;
   isCheapest?: boolean;
+  compact?: boolean;
   className?: string;
 }) {
   const style = merchantStyle(link.merchantName);
@@ -66,7 +68,8 @@ export function MerchantCta({
       rel="sponsored nofollow noopener"
       style={{ backgroundColor: style.bg }}
       className={cn(
-        "flex min-h-[48px] items-center justify-between gap-3 rounded-control px-4 py-2.5 font-semibold text-white transition hover:-translate-y-px hover:brightness-110",
+        "flex min-h-[48px] min-w-0 items-center gap-3 rounded-control px-4 py-2.5 font-semibold text-white transition hover:-translate-y-px hover:brightness-110",
+        compact ? "w-fit max-w-full justify-start" : "justify-between",
         className
       )}
     >
@@ -75,9 +78,9 @@ export function MerchantCta({
           {style.mark}
         </span>
         <span className="grid min-w-0">
-          <span className="truncate text-sm">{link.buttonLabel || `Cek harga di ${link.merchantName}`}</span>
+          <span className="break-words text-sm leading-snug">{link.buttonLabel || `Cek harga di ${link.merchantName}`}</span>
           {typeof link.price === "number" ? (
-            <span className="flex items-center gap-1.5 text-xs font-normal text-white/80">
+            <span className="flex flex-wrap items-center gap-1.5 text-xs font-normal text-white/80">
               {formatRupiah(link.price)}
               {isCheapest ? (
                 <span className="rounded-full bg-white/20 px-1.5 py-0.5 text-[10px] font-bold tracking-wide">TERMURAH</span>
