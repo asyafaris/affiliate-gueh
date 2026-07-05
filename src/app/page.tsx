@@ -11,6 +11,8 @@ import { PriceEstimate } from "@/components/public/PriceEstimate";
 import { MarkdownText } from "@/components/public/MarkdownText";
 import { ImagePlaceholder } from "@/components/shared/ImagePlaceholder";
 import type { ProductCardData } from "@/types/domain";
+import { SpeedInsights } from "@vercel/speed-insights/next";
+import { Analytics } from "@vercel/analytics/next";
 
 export const dynamic = "force-dynamic";
 
