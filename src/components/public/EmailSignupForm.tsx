@@ -44,7 +44,7 @@ export function EmailSignupForm({
         setStatus("error");
         setMessage(data.error || "Gagal subscribe. Coba lagi nanti.");
       }
-    } catch (error) {
+    } catch {
       setStatus("error");
       setMessage("Gagal subscribe karena koneksi bermasalah. Coba ulangi sebentar lagi.");
     } finally {

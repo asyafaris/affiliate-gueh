@@ -42,7 +42,7 @@ export function SeoMetadataForm({ productId, productName, currentData }: Props) 
       } else {
         setMessage(result.error ?? "SEO metadata gagal disimpan. Cek kembali field yang wajib diisi.");
       }
-    } catch (error) {
+    } catch {
       setMessage("SEO metadata gagal disimpan karena koneksi atau server bermasalah. Coba ulangi sebentar lagi.");
     } finally {
       setLoading(false);

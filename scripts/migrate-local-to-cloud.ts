@@ -1,6 +1,6 @@
 import 'dotenv/config';
 import * as path from "path";
-import { promises as fs } from "fs";
+import { promises as fs, readFileSync } from "fs";
 import { PrismaClient } from "@prisma/client";
 import { v2 as cloudinary } from "cloudinary";
 
@@ -13,9 +13,9 @@ function loadDotenvFileSync() {
     for (const file of candidates) {
       const envPath = path.join(process.cwd(), file);
       try {
-        content = require("fs").readFileSync(envPath, "utf8");
+        content = readFileSync(envPath, "utf8");
         break;
-      } catch (e) {
+      } catch {
         // continue
       }
     }
@@ -32,7 +32,7 @@ function loadDotenvFileSync() {
       }
       if (process.env[key] === undefined) process.env[key] = val;
     }
-  } catch (err) {
+  } catch {
     // ignore if no .env file
   }
 }
@@ -137,7 +137,7 @@ async function uploadLocalFile(filePath: string) {
   return result.secure_url;
 }
 
-async function uploadLocalImagesInRow<T extends { [key: string]: any }>(row: T, keys: string[]) {
+async function uploadLocalImagesInRow<T extends Record<string, unknown> & { id?: unknown }>(row: T, keys: string[]) {
   const updated: Record<string, string> = {};
 
   for (const key of keys) {
@@ -210,7 +210,11 @@ async function uploadOrphanLocalImages() {
   }
 }
 
-async function migrateModel<T extends Record<string, unknown>>(modelName: string, rows: T[], createMany: (args: any) => Promise<unknown>) {
+async function migrateModel<T extends Record<string, unknown>>(
+  modelName: string,
+  rows: T[],
+  createMany: (args: never) => Promise<unknown>
+) {
   console.log(`Migrating ${rows.length} ${modelName} row(s)...`);
   if (!rows.length) {
     console.log(`  No ${modelName} rows found.`);
@@ -218,7 +222,7 @@ async function migrateModel<T extends Record<string, unknown>>(modelName: string
   }
 
   try {
-    await createMany({ data: rows as any, skipDuplicates: true });
+    await createMany({ data: rows, skipDuplicates: true } as never);
     console.log(`  ${modelName} migrated.`);
   } catch (error) {
     console.error(`Failed migrating ${modelName}:`, error instanceof Error ? error.message : error);

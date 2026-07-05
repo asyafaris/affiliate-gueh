@@ -68,7 +68,7 @@ export function ExpertSourceForm({ productId, expertSources }: Props) {
       } else {
         setMessage(result.error ?? "Expert source gagal ditambahkan. Cek kembali datanya.");
       }
-    } catch (error) {
+    } catch {
       setMessage("Expert source gagal ditambahkan karena koneksi atau server bermasalah. Coba ulangi sebentar lagi.");
     } finally {
       setLoading(false);

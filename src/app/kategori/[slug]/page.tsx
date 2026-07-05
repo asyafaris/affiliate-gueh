@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 import { notFound } from "next/navigation";
 import { ArrowRight, BookOpen, GitCompare } from "lucide-react";
 import { getDb } from "@/lib/db";
