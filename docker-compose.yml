@@ -1,25 +1,53 @@
-version: "3.9"
 services:
   db:
-    image: postgres:15
+    image: postgres:15-alpine
     restart: unless-stopped
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: affiliate_gueh
+    ports:
+      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d affiliate_gueh"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # One-off job: applies Prisma migrations. Run with: docker compose run --rm migrate
+  migrate:
+    build:
+      context: .
+      target: builder
+    command: npx prisma migrate deploy
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/affiliate_gueh
+      DIRECT_URL: postgresql://postgres:postgres@db:5432/affiliate_gueh
+    depends_on:
+      db:
+        condition: service_healthy
+    profiles: ["tools"]
 
   web:
     build:
       context: .
       dockerfile: Dockerfile
+    restart: unless-stopped
     ports:
       - "3000:3000"
     env_file:
       - .env
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/affiliate_gueh
+      DIRECT_URL: postgresql://postgres:postgres@db:5432/affiliate_gueh
+      NEXTAUTH_URL: http://localhost:3000
     depends_on:
-      - db
+      db:
+        condition: service_healthy
 
 volumes:
   postgres_data:

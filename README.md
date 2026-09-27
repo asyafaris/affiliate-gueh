@@ -61,20 +61,34 @@ Admin login defaults from `.env.example`:
 
 ## Docker
 
-Build and run the app in a container:
+The image uses Next.js standalone output and runs as a non-root user. `.env` is read at runtime (never baked into the image).
+
+Run the app together with a local PostgreSQL database:
+
+```bash
+docker compose up --build -d
+docker compose run --rm migrate                # apply Prisma migrations
+```
+
+Compose overrides `DATABASE_URL`/`DIRECT_URL` to point at the `db` service and `NEXTAUTH_URL` to `http://localhost:3000`; other values come from `.env`. The app is available at `http://localhost:3000`.
+
+To run only the app container against an external database (e.g. Supabase/Neon):
 
 ```bash
 docker build -t affiliate-gueh .
 docker run --env-file .env -p 3000:3000 affiliate-gueh
 ```
 
-Use Docker Compose for a local PostgreSQL database:
+## Cloudflare Workers Deployment
 
-```bash
-docker compose up --build
-```
+Uses `@opennextjs/cloudflare` with Prisma's `pg` driver adapter. Deploy via the Cloudflare dashboard (no CLI login needed):
 
-The app will be available at `http://localhost:3000`.
+1. Cloudflare dashboard > Workers & Pages > Create > Import a repository (GitHub), pick this repo.
+2. Build command: `npx opennextjs-cloudflare build`
+3. Deploy command: `npx wrangler deploy`
+4. Add variables/secrets (Settings > Variables and Secrets): `DATABASE_URL`, `DIRECT_URL`, `NEXTAUTH_SECRET`, `NEXTAUTH_URL` (your `*.workers.dev` URL), `NEXT_PUBLIC_SITE_URL`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `CLOUDINARY_*`. `NEXT_PUBLIC_SITE_URL` must also be set under Build variables.
+
+Optional: add a Hyperdrive binding named `HYPERDRIVE` in `wrangler.jsonc`; `getDb()` uses it automatically. Local preview: `npm run cloudflare:dev`. Migrations are applied with `prisma migrate deploy`, not from the Worker.
 
 ## Vercel Deployment
 

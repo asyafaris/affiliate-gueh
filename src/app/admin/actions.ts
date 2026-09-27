@@ -1,6 +1,5 @@
 "use server";
 
-import { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
@@ -63,7 +62,10 @@ async function successAction(message: string, path?: string): Promise<never> {
 }
 
 function databaseMessage(error: unknown, fallback: string) {
-  if (error instanceof Prisma.PrismaClientKnownRequestError) {
+  // Duck-typed: the Prisma runtime differs between Node and Workers, so instanceof is unreliable.
+  const known = error as { name?: string; code?: string; meta?: { target?: unknown } } | null;
+  if (known?.name === "PrismaClientKnownRequestError") {
+    const error = known;
     if (error.code === "P2002") {
       const target = Array.isArray(error.meta?.target) ? error.meta.target.join(", ") : "field unik";
       if (target.includes("redirectCode")) return "Redirect code sudah dipakai. Gunakan kode lain yang unik.";

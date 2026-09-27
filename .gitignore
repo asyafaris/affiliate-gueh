@@ -9,3 +9,7 @@ dev-server*.log
 
 .vercel
 .env*
+
+.open-next
+.wrangler
+.dev.vars

@@ -81,7 +81,9 @@ export default async function HomePage() {
       },
       orderBy: { publishedAt: "desc" },
       take: 4
-    })
+    })'''''''''
+
+    
   ]);
 
   const featuredProduct = products[0];

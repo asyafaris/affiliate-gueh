@@ -1,0 +1,684 @@
+@startuml
+title WorthGoods (affiliate-gueh) - Application Class Diagram
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam wrapWidth 220
+hide empty members
+
+' =========================================================================
+' ENUMS (prisma/schema.prisma)
+' =========================================================================
+package "Domain Enums" {
+  enum UserRole {
+    ADMIN
+    EDITOR
+  }
+
+  enum ProsConsType {
+    PRO
+    CON
+  }
+
+  enum ArticleType {
+    GUIDE
+    REVIEW
+    COMPARISON
+    BEST_PICKS
+    TIPS
+  }
+}
+
+' =========================================================================
+' DOMAIN MODEL / PERSISTENCE LAYER (prisma/schema.prisma -> Prisma Client)
+' =========================================================================
+package "Domain Model (Prisma ORM)" {
+
+  class User {
+    +id: String <<PK>>
+    +email: String <<unique>>
+    -passwordHash: String
+    +name: String
+    +title: String?
+    +avatarUrl: String?
+    +role: UserRole = ADMIN
+    +isActive: Boolean = true
+    +lastLoginAt: DateTime?
+    +createdAt: DateTime
+    +updatedAt: DateTime
+  }
+
+  class Category {
+    +id: String <<PK>>
+    +name: String
+    +slug: String <<unique>>
+    +description: String
+    +imageUrl: String?
+    +parentId: String?
+    +featured: Boolean = false
+    +sortOrder: Int = 0
+    +createdAt: DateTime
+    +updatedAt: DateTime
+  }
+
+  class Brand {
+    +id: String <<PK>>
+    +name: String
+    +slug: String <<unique>>
+    +websiteUrl: String?
+    +description: String?
+    +logoUrl: String?
+    +createdAt: DateTime
+    +updatedAt: DateTime
+  }
+
+  class Product {
+    +id: String <<PK>>
+    +categoryId: String <<FK>>
+    +brandId: String <<FK>>
+    +name: String
+    +slug: String <<unique>>
+    +shortDescription: String
+    +editorialSummary: String
+    +bestFor: String
+    +priceEstimate: Int
+    +compareAtPrice: Int?
+    +currency: String = "IDR"
+    +score: Float?
+    +reviewCount: Int = 0
+    +hoursTested: Int?
+    +evidenceStats: Json = []
+    +isFeatured: Boolean = false
+    +isPublished: Boolean = false
+    +publishedAt: DateTime?
+    +createdAt: DateTime
+    +updatedAt: DateTime
+  }
+
+  class ProductImage {
+    +id: String <<PK>>
+    +productId: String <<FK>>
+    +imageUrl: String
+    +altText: String
+    +caption: String?
+    +sortOrder: Int = 0
+    +isPrimary: Boolean = false
+    +createdAt: DateTime
+  }
+
+  class ProductAffiliateLink {
+    +id: String <<PK>>
+    +productId: String <<FK>>
+    +merchantName: String
+    +buttonLabel: String
+    +affiliateUrl: String
+    +price: Int?
+    +redirectCode: String <<unique>>
+    +isPrimary: Boolean = false
+    +isActive: Boolean = true
+    +sortOrder: Int = 0
+    +createdAt: DateTime
+    +updatedAt: DateTime
+  }
+
+  class ProductSpec {
+    +id: String <<PK>>
+    +productId: String <<FK>>
+    +specGroup: String
+    +label: String
+    +value: String
+    +sortOrder: Int = 0
+  }
+
+  class ProductProsCons {
+    +id: String <<PK>>
+    +productId: String <<FK>>
+    +type: ProsConsType
+    +content: String
+    +sortOrder: Int = 0
+  }
+
+  class Article {
+    +id: String <<PK>>
+    +authorId: String <<FK>>
+    +title: String
+    +slug: String <<unique>>
+    +excerpt: String
+    +coverImageUrl: String?
+    +contentMd: String
+    +articleType: ArticleType
+    +isPublished: Boolean = false
+    +publishedAt: DateTime?
+    +createdAt: DateTime
+    +updatedAt: DateTime
+  }
+
+  class ArticleCategory {
+    +id: String <<PK>>
+    +articleId: String <<FK>>
+    +categoryId: String <<FK>>
+    .. unique(articleId, categoryId) ..
+  }
+
+  class ArticleProduct {
+    +id: String <<PK>>
+    +articleId: String <<FK>>
+    +productId: String <<FK>>
+    +placementNote: String?
+    +sortOrder: Int = 0
+    .. unique(articleId, productId) ..
+  }
+
+  class HomepageSection {
+    +id: String <<PK>>
+    +sectionKey: String <<unique>>
+    +title: String
+    +subtitle: String?
+    +payload: Json
+    +isActive: Boolean = true
+    +sortOrder: Int = 0
+    +updatedAt: DateTime
+  }
+
+  class AffiliateClick {
+    +id: String <<PK>>
+    +productId: String <<FK>>
+    +affiliateLinkId: String <<FK>>
+    +sourcePageType: String?
+    +sourcePageSlug: String?
+    +referrer: String?
+    +utmSource: String?
+    +utmMedium: String?
+    +utmCampaign: String?
+    +deviceType: String?
+    +clickedAt: DateTime
+  }
+
+  class SeoMetadata {
+    +id: String <<PK>>
+    +subjectType: String
+    +subjectId: String
+    +seoTitle: String
+    +metaDescription: String
+    +canonicalUrl: String?
+    +ogTitle: String?
+    +ogDescription: String?
+    +ogImageUrl: String?
+    +robots: String?
+    +schemaHint: String?
+    +updatedAt: DateTime
+    .. unique(subjectType, subjectId) ..
+    .. polymorphic soft-reference, no FK ..
+  }
+
+  class ExpertSource {
+    +id: String <<PK>>
+    +productId: String <<FK>>
+    +sourceType: String
+    +sourceName: String
+    +sourceUrl: String
+    +sourceAuthorFollowers: Int?
+    +quote: String?
+    +addedAt: DateTime
+  }
+
+  class EmailSubscriber {
+    +id: String <<PK>>
+    +email: String <<unique>>
+    +source: String = "unknown"
+    +subscribedAt: DateTime
+    +unsubscribedAt: DateTime?
+  }
+}
+
+' ---- domain relationships (with cardinality + onDelete behaviour) ----
+User "1" -- "0..*" Article : writes >
+Category "0..1" -- "0..*" Category : parent / children (self-relation "CategoryTree")
+Category "1" -- "0..*" Product : classifies >
+Brand "1" -- "0..*" Product : manufactures >
+Product "1" *-- "0..*" ProductImage : gallery
+Product "1" *-- "0..*" ProductAffiliateLink : offers
+Product "1" *-- "0..*" ProductSpec : specifications
+Product "1" *-- "0..*" ProductProsCons : evaluation
+Product "1" *-- "0..*" ExpertSource : cited by
+Product "1" -- "0..*" AffiliateClick : tracked in
+Product "1" -- "0..*" ArticleProduct : placed in
+ProductAffiliateLink "1" -- "0..*" AffiliateClick : generates
+Article "1" -- "0..*" ArticleCategory : tagged in
+Category "1" -- "0..*" ArticleCategory : groups
+Article "1" -- "0..*" ArticleProduct : features
+
+Product ..> ProsConsType : uses
+ProductProsCons ..> ProsConsType : typed by
+User ..> UserRole : typed by
+Article ..> ArticleType : typed by
+SeoMetadata ..> Product : describes (string subjectId, no FK)
+
+note right of Category
+  onDelete rules:
+  parent -> SetNull, category on Product -> Cascade
+end note
+note right of Article
+  author -> onDelete Restrict
+  (cannot delete a User who has articles)
+end note
+
+' =========================================================================
+' DTO / VIEW MODELS (src/types/domain.ts)
+' =========================================================================
+package "DTO / View Models (types domain.ts)" {
+  class ProductCardData <<DTO>> {
+    +id: String?
+    +name: String
+    +slug: String
+    +shortDescription: String
+    +bestFor: String
+    +priceEstimate: Number
+    +compareAtPrice: Number?
+    +score: Number?
+    +reviewCount: Number?
+    +brand: name
+    +category: name
+    +images: imageUrl, altText list
+    +affiliateLinks: redirectCode, merchantName, buttonLabel, isPrimary, price list
+  }
+
+  class CategorySummary <<DTO>> {
+    +id: String
+    +name: String
+    +slug: String
+    +description: String
+    +imageUrl: String?
+    +featured: Boolean?
+    +sortOrder: Number?
+  }
+
+  class BrandSummary <<DTO>> {
+    +id: String
+    +name: String
+    +slug: String
+    +websiteUrl: String?
+  }
+
+  class ArticleSummary <<DTO>> {
+    +id: String
+    +title: String
+    +slug: String
+    +excerpt: String
+    +articleType: ArticleType
+    +isPublished: Boolean?
+    +updatedAt: Date?
+  }
+
+  class AffiliateLinkSummary <<DTO>> {
+    +id: String
+    +merchantName: String
+    +buttonLabel: String
+    +redirectCode: String
+    +isActive: Boolean?
+    +isPrimary: Boolean
+    +price: Number?
+  }
+
+  class ProsConsItem <<DTO>> {
+    +id: String?
+    +type: ProsConsType
+    +content: String
+    +sortOrder: Number?
+  }
+
+  class SpecItem <<DTO>> {
+    +id: String?
+    +specGroup: String
+    +label: String
+    +value: String
+    +sortOrder: Number?
+  }
+
+  class RankedProduct <<DTO>> {
+    +editorialSummary: String
+    +brand: name
+    +prosCons: ProsConsItem list
+    +affiliateLinks: AffiliateLinkSummary list
+  }
+
+  class ComparisonProduct <<DTO>> {
+    +specs: SpecItem list
+  }
+
+  RankedProduct --|> ProductCardData : derived via Omit id plus intersection
+  ComparisonProduct --|> RankedProduct : extends
+  RankedProduct o-- "0..*" ProsConsItem
+  RankedProduct o-- "0..*" AffiliateLinkSummary
+  ComparisonProduct o-- "0..*" SpecItem
+}
+
+ProductCardData ..> Product : projected from
+CategorySummary ..> Category : projected from
+BrandSummary ..> Brand : projected from
+ArticleSummary ..> Article : projected from
+AffiliateLinkSummary ..> ProductAffiliateLink : projected from
+ProsConsItem ..> ProductProsCons : projected from
+SpecItem ..> ProductSpec : projected from
+
+' =========================================================================
+' INFRASTRUCTURE LAYER
+' =========================================================================
+package "Infrastructure (src lib, src utils)" {
+  class Db <<singleton>> {
+    -{static} globalForPrisma.prisma: PrismaClient
+    +{static} getDb(): PrismaClient
+  }
+
+  class CloudinaryProvider <<singleton>> {
+    -configured: Boolean
+    +getCloudinary(): CloudinaryInstance
+  }
+
+  class SupabaseServerClient <<stub>> {
+    +createClient(): object
+  }
+
+  class SupabaseBrowserClient <<stub>> {
+    +createClient(): object
+  }
+
+  class SessionMiddleware {
+    +updateSession(request): NextResponse
+  }
+
+  note bottom of Db
+    Thin wrapper around a global PrismaClient
+    instance (hot-reload safe). Every service,
+    server action and route handler below reads
+    through Db.getDb(). Depends on the full
+    Domain Model package.
+  end note
+
+  note bottom of SupabaseServerClient
+    Legacy/incomplete migration stub: returns an
+    empty object, superseded by Cloudinary +
+    direct Prisma/Postgres access.
+  end note
+}
+
+' =========================================================================
+' AUTH & AUTHORIZATION
+' =========================================================================
+package "Auth and Authorization (src lib auth.ts, admin.ts)" {
+  class AuthOptions <<NextAuth config>> {
+    +session.strategy: jwt
+    +pages.signIn: /admin/login
+    +providers: CredentialsProvider list
+    +authorize(credentials): id, email, name, role
+    +jwt(token, user): token
+    +session(session, token): session
+  }
+
+  class CredentialsProvider <<next-auth>> {
+    +name: Email dan password
+    +credentials: email, password
+  }
+
+  class AdminGuard {
+    +requireAdmin(): Session
+  }
+}
+
+AuthOptions o-- CredentialsProvider
+AuthOptions ..> Db : findUnique email, update lastLoginAt
+AuthOptions ..> User : validates passwordHash via bcrypt
+AdminGuard ..> AuthOptions : getServerSession
+
+' =========================================================================
+' SERVICE LAYER
+' =========================================================================
+package "Service Layer (src lib)" {
+  class AnalyticsService {
+    +getAffiliateStats(startDate, endDate): AffiliateStatsResult
+    +getDailyCTR(productId, days): DailyCTRResult
+  }
+
+  class ComparisonEngine {
+    -textScore(product, keywords): number
+    -valueScore(product): number
+    -compromiseScore(product): number
+    -pickHighest(products, scoreFn): VerdictProduct
+    +generateComparisonVerdict(products): ComparisonVerdict
+  }
+
+  class SeoMetadataBuilder {
+    +buildMetadata(input): Metadata
+    +breadcrumbJsonLd(items): JsonLd
+    +articleJsonLd(article): JsonLd
+    +productJsonLd(product): JsonLd
+  }
+
+  class MerchantStyleRegistry {
+    +{static} MERCHANT_STYLES: map of name to bg, mark
+    +merchantStyle(merchantName): bg, mark
+  }
+
+  class Utils <<utility>> {
+    +cn(inputs): string
+    +formatRupiah(value): string
+    +absoluteUrl(path): string
+    +detectDevice(userAgent): string
+    +parseEvidenceStats(payload): EvidenceStat list
+    +estimateReadTime(content): number
+    +slugify(value): string
+  }
+}
+
+AnalyticsService ..> Db
+AnalyticsService ..> AffiliateClick
+AnalyticsService ..> ProductAffiliateLink
+ComparisonEngine ..> RankedProduct : consumes as VerdictProduct
+SeoMetadataBuilder ..> Utils : absoluteUrl()
+
+' =========================================================================
+' APPLICATION LAYER — SERVER ACTIONS
+' =========================================================================
+package "Application Layer - Server Actions (admin actions.ts)" {
+  class AdminActions <<use server>> {
+    +saveCategory(formData): void
+    +deleteCategory(formData): void
+    +saveBrand(formData): void
+    +deleteBrand(formData): void
+    +saveProduct(formData): void
+    +deleteProduct(formData): void
+    +saveAffiliateLink(formData): void
+    +deleteAffiliateLink(formData): void
+    +saveArticle(formData): void
+    +deleteArticle(formData): void
+    +updateSeoMetadata(productId, data): success, error
+    +addExpertSource(productId, data): success, data, error
+    +removeExpertSource(sourceId): success, error
+    +saveHomepageSection(formData): void
+    -parsePairs(value, label): label, value list
+    -databaseMessage(error, fallback): string
+    -failAction(message): never
+    -successAction(message, path): never
+  }
+}
+
+AdminActions ..> AdminGuard : requireAdmin()
+AdminActions ..> Db : getDb()
+AdminActions ..> Utils : slugify()
+AdminActions ..> Category
+AdminActions ..> Brand
+AdminActions ..> Product
+AdminActions ..> ProductImage
+AdminActions ..> ProductSpec
+AdminActions ..> ProductProsCons
+AdminActions ..> ProductAffiliateLink
+AdminActions ..> Article
+AdminActions ..> ArticleProduct
+AdminActions ..> SeoMetadata
+AdminActions ..> ExpertSource
+AdminActions ..> HomepageSection
+
+' =========================================================================
+' API LAYER — ROUTE HANDLERS
+' =========================================================================
+package "API Layer - Route Handlers (src app api, src app go)" {
+  class "NextAuthRouteHandler (api auth catch-all)" as NextAuthRouteHandler <<API Route>> {
+    +GET(request): Response
+    +POST(request): Response
+  }
+
+  class "UploadRouteHandler (api admin uploads)" as UploadRouteHandler <<API Route>> {
+    +POST(request): url, filename or error
+  }
+
+  class "AnalyticsRouteHandler (api admin analytics)" as AnalyticsRouteHandler <<API Route>> {
+    +GET(request): AffiliateStatsResult or error
+  }
+
+  class "SubscribeRouteHandler (api email subscribe)" as SubscribeRouteHandler <<API Route>> {
+    +POST(request): success, message or error
+  }
+
+  class "AffiliateRedirectPage (go [code])" as AffiliateRedirectPage <<Server Component>> {
+    +GoPage(params, searchParams): Redirect or NotAvailableView
+  }
+}
+
+NextAuthRouteHandler ..> AuthOptions
+UploadRouteHandler ..> AuthOptions : getServerSession
+UploadRouteHandler ..> CloudinaryProvider
+AnalyticsRouteHandler ..> AuthOptions : getServerSession
+AnalyticsRouteHandler ..> AnalyticsService
+SubscribeRouteHandler ..> Db
+SubscribeRouteHandler ..> EmailSubscriber
+AffiliateRedirectPage ..> Db
+AffiliateRedirectPage ..> ProductAffiliateLink : findUnique by redirectCode
+AffiliateRedirectPage ..> AffiliateClick : creates
+AffiliateRedirectPage ..> Utils : detectDevice()
+
+' =========================================================================
+' PRESENTATION LAYER — PUBLIC PAGES
+' =========================================================================
+package "Presentation - Public Pages (src app)" {
+  class "HomePage (/)" as HomePage <<Page>>
+  class "CategoryListPage (/kategori)" as CategoryListPage <<Page>>
+  class "CategoryDetailPage (/kategori/[slug])" as CategoryDetailPage <<Page>>
+  class "ProductDetailPage (/produk/[slug])" as ProductDetailPage <<Page>>
+  class "ArticleDetailPage (/artikel/[slug])" as ArticleDetailPage <<Page>>
+  class "ComparisonListPage (/bandingkan)" as ComparisonListPage <<Page>>
+  class "ComparisonDetailPage (/bandingkan/[slug])" as ComparisonDetailPage <<Page>>
+  class "BestPicksListPage (/best)" as BestPicksListPage <<Page>>
+  class "BestPicksDetailPage (/best/[slug])" as BestPicksDetailPage <<Page>>
+  class "ContactPage (/kontak)" as ContactPage <<Page>>
+  class "AboutPage (/tentang)" as AboutPage <<Page>>
+  class "DisclosurePage (/affiliate-disclosure)" as DisclosurePage <<Page>>
+}
+
+' =========================================================================
+' PRESENTATION LAYER — ADMIN PAGES
+' =========================================================================
+package "Presentation - Admin Pages (src app admin)" {
+  class "AdminLoginPage (/admin/login)" as AdminLoginPage <<Page>>
+  class "AdminDashboardPage (/admin)" as AdminDashboardPage <<Page>>
+  class "AdminProductsPage (/admin/products)" as AdminProductsPage <<Page>>
+  class "AdminProductEditPage (/admin/products/[id]/edit)" as AdminProductEditPage <<Page>>
+  class "AdminProductNewPage (/admin/products/new)" as AdminProductNewPage <<Page>>
+  class "AdminCategoriesPage (/admin/categories)" as AdminCategoriesPage <<Page>>
+  class "AdminBrandsPage (/admin/brands)" as AdminBrandsPage <<Page>>
+  class "AdminArticlesPage (/admin/articles)" as AdminArticlesPage <<Page>>
+  class "AdminArticleNewPage (/admin/articles/new)" as AdminArticleNewPage <<Page>>
+  class "AdminArticleEditPage (/admin/articles/[id]/edit)" as AdminArticleEditPage <<Page>>
+  class "AdminAffiliateLinksPage (/admin/affiliate-links)" as AdminAffiliateLinksPage <<Page>>
+  class "AdminBestPicksPage (/admin/best-picks)" as AdminBestPicksPage <<Page>>
+  class "AdminComparisonsPage (/admin/comparisons)" as AdminComparisonsPage <<Page>>
+  class "AdminReviewsPage (/admin/reviews)" as AdminReviewsPage <<Page>>
+  class "AdminTipsPage (/admin/tips)" as AdminTipsPage <<Page>>
+  class "AdminAnalyticsPage (/admin/analytics)" as AdminAnalyticsPage <<Page>>
+  class "AdminHomepagePage (/admin/homepage)" as AdminHomepagePage <<Page>>
+  class AdminShell <<Layout>>
+}
+
+' =========================================================================
+' PRESENTATION LAYER — REUSABLE COMPONENTS (representative)
+' =========================================================================
+package "Presentation - Reusable Components (src components)" {
+  class Header
+  class Footer
+  class HeroSection
+  class ProductCard
+  class ProductGrid
+  class LoadMoreProductGrid
+  class ProductImageGallery
+  class AffiliateButtonGroup
+  class ProsConsList
+  class SpecsTable
+  class QuickPicksTable
+  class InteractiveComparison
+  class VerdictPanel
+  class FeatureMatrix
+  class ArticleBody
+  class MarkdownText
+  class EmailSignupForm
+  class SocialProofMetrics
+  class Breadcrumbs
+  class ProductForm <<admin>>
+  class ArticleForm <<admin>>
+  class ExpertSourceForm <<admin>>
+  class SeoMetadataForm <<admin>>
+  class ImageUploadInput <<admin>>
+  class MarkdownEditor <<admin>>
+
+  note bottom of MarkdownEditor
+    Additional presentational atoms omitted for
+    brevity: Badge, StatusChip, Tabs, FilterChipBar,
+    ImagePlaceholder, EmptyState, LoadingState,
+    ReadingProgressBar, PriceEstimate, BestForBadge,
+    ImageListInput, AdminField, AdminFlash.
+  end note
+}
+
+' ---- presentation -> lower layers ----
+HomePage ..> Db
+HomePage ..> ProductGrid
+HomePage ..> HeroSection
+CategoryDetailPage ..> Db
+CategoryDetailPage ..> ProductGrid
+ProductDetailPage ..> Db
+ProductDetailPage ..> SeoMetadataBuilder
+ProductDetailPage ..> AffiliateButtonGroup
+ProductDetailPage ..> ProsConsList
+ProductDetailPage ..> SpecsTable
+ProductDetailPage ..> ProductImageGallery
+ArticleDetailPage ..> Db
+ArticleDetailPage ..> ArticleBody
+ArticleDetailPage ..> SeoMetadataBuilder
+ComparisonDetailPage ..> ComparisonEngine
+ComparisonDetailPage ..> InteractiveComparison
+ComparisonDetailPage ..> VerdictPanel
+BestPicksDetailPage ..> QuickPicksTable
+BestPicksDetailPage ..> Db
+
+AdminShell ..> AdminGuard
+AdminProductsPage --|> AdminShell
+AdminProductEditPage --|> AdminShell
+AdminProductEditPage ..> ProductForm
+AdminProductEditPage ..> AdminActions
+AdminArticleEditPage --|> AdminShell
+AdminArticleEditPage ..> ArticleForm
+AdminArticleEditPage ..> AdminActions
+AdminCategoriesPage --|> AdminShell
+AdminCategoriesPage ..> AdminActions
+AdminBrandsPage --|> AdminShell
+AdminBrandsPage ..> AdminActions
+AdminAffiliateLinksPage --|> AdminShell
+AdminAffiliateLinksPage ..> AdminActions
+AdminHomepagePage --|> AdminShell
+AdminHomepagePage ..> AdminActions
+AdminAnalyticsPage --|> AdminShell
+AdminAnalyticsPage ..> AnalyticsRouteHandler
+ProductForm ..> ImageUploadInput
+ProductForm ..> SeoMetadataForm
+ProductForm ..> ExpertSourceForm
+ArticleForm ..> MarkdownEditor
+
+@enduml

@@ -11,9 +11,13 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
     "seed": "tsx prisma/seed.ts",
-    "migrate:cloud": "tsx scripts/migrate-local-to-cloud.ts"
+    "migrate:cloud": "tsx scripts/migrate-local-to-cloud.ts",
+    "cloudflare:build": "opennextjs-cloudflare build",
+    "cloudflare:dev": "opennextjs-cloudflare build && wrangler dev",
+    "cloudflare:deploy": "opennextjs-cloudflare build && wrangler deploy"
   },
   "dependencies": {
+    "@prisma/adapter-pg": "^6.19.3",
     "@prisma/client": "^6.7.0",
     "@uiw/react-md-editor": "^4.1.0",
     "@vercel/analytics": "^2.0.1",
@@ -25,6 +29,7 @@
     "lucide-react": "^0.468.0",
     "next": "^15.3.0",
     "next-auth": "^4.24.14",
+    "pg": "^8.23.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-hook-form": "^7.56.0",
@@ -32,9 +37,11 @@
     "zod": "^3.24.2"
   },
   "devDependencies": {
+    "@opennextjs/cloudflare": "^1.7.0",
     "@tailwindcss/typography": "^0.5.16",
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^22.14.0",
+    "@types/pg": "^8.23.1",
     "@types/react": "^19.0.12",
     "@types/react-dom": "^19.0.4",
     "autoprefixer": "^10.4.21",
@@ -44,7 +51,8 @@
     "prisma": "^6.7.0",
     "tailwindcss": "^3.4.17",
     "tsx": "^4.19.3",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "wrangler": "^4.39.0"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
